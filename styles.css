@@ -139,7 +139,6 @@
   .btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px);}
   .btn-ghost{background:var(--surface);color:var(--ink-2);border-color:var(--line);box-shadow:var(--shadow-sm);}
   .btn-ghost:hover{color:var(--ink);}
-  .file-input{display:none;}
 
   /* ---- chart card ---- */
   .card{
@@ -193,6 +192,9 @@
   .check.indet svg{opacity:1;transform:scale(1);}
   .netbar{position:relative;height:5px;border-radius:3px;background:var(--line-2);width:64px;display:inline-block;vertical-align:middle;margin-right:8px;overflow:hidden;}
   .netbar i{position:absolute;left:0;top:0;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent-2));}
+  .asset-inner{display:grid;grid-template-columns:72px 1fr;align-items:center;gap:0;}
+  .asset-inner .netbar{margin-right:0;}
+  .asset-val{text-align:right;white-space:nowrap;}
   .flow-pos{color:var(--inflow);font-weight:600;}
   .flow-neg{color:var(--outflow);font-weight:600;}
   .pct{font-weight:700;}

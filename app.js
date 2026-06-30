@@ -6,10 +6,10 @@ let selectedLeaf=null;
 let lastAssetCat=null;   // for unit re-render
 let lastLeaf=null;       // {leaf, group}
 
-let state={country:"ALL",view:"flow",period:"flow_3m",enabled:{}};
+let state={country:"US",view:"flow",period:"flow_3m",enabled:{}};
 const PERIOD_SCALE={flow_1w:60,flow_1m:14,flow_3m:8,flow_6m:5,flow_ytd:6,flow_1y:2.2};
 const PERIOD_LABEL={flow_1w:"최근 1주",flow_1m:"최근 1개월",flow_3m:"최근 3개월",flow_6m:"최근 6개월",flow_ytd:"연초 이후",flow_1y:"최근 1년"};
-const C_LABEL={ALL:"국가전체",US:"미국",HK:"홍콩",JP:"일본"};
+const C_LABEL={US:"미국",HK:"홍콩",JP:"일본"};
 
 /* ---- currency unit system (base data is in MILLIONS of USD) ---- */
 /* factor = how many base-millions per 1 display-unit */
@@ -114,7 +114,7 @@ function renderTable(){
     let cells=`
       <td class="chk"><span class="check ${on?"on":""}"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span></td>
       <td class="cat"><span class="dot-cat cat-link"><i style="background:${COLORS[r.category]||"#888"}"></i>${r.category}<svg class="cat-arrow" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></td>
-      <td><span class="netbar"><i style="width:${(r.netasset/maxAsset*100).toFixed(0)}%"></i></span><span class="num">${fmt(r.netasset)}</span> <span class="pct" style="color:var(--ink-3)">${pct.toFixed(1)}%</span></td>`;
+      <td><div class="asset-inner"><span class="netbar"><i style="width:${(r.netasset/maxAsset*100).toFixed(0)}%"></i></span><span class="asset-val"><span class="num">${fmt(r.netasset)}</span> <span class="pct" style="color:var(--ink-3)">${pct.toFixed(1)}%</span></span></div></td>`;
     periods.forEach(p=>{
       if(state.view==="return"){
         const v=pseudoReturn(r.category,p);
@@ -128,7 +128,7 @@ function renderTable(){
   });
 
   const tr=document.createElement("tr");tr.className="total-row";
-  let t=`<td class="chk"></td><td class="cat">합계</td><td><span class="num">${fmt(total)}</span> <span class="pct" style="color:var(--ink-3)">100%</span></td>`;
+  let t=`<td class="chk"></td><td class="cat">합계</td><td><div class="asset-inner"><span class="netbar" style="visibility:hidden"></span><span class="asset-val"><span class="num">${fmt(total)}</span> <span class="pct" style="color:var(--ink-3)">100%</span></span></div></td>`;
   periods.forEach(p=>{
     if(state.view==="return"){
       // asset-weighted average return
@@ -265,40 +265,152 @@ document.querySelectorAll("#axisSeg button").forEach(b=>b.addEventListener("clic
 }));
 window.addEventListener("resize",()=>{if(chartData&&chartData.bar)drawBarChart();else drawChart();});
 
-/* ---------- CSV ---------- */
-function parseCsv(text){
-  const lines=text.replace(/\r/g,"").split("\n").filter(l=>l.trim());
-  if(!lines.length)return[];
-  const h=lines[0].split(",").map(s=>s.trim());
-  return lines.slice(1).map(l=>{const c=l.split(",");const o={};h.forEach((k,i)=>o[k]=(c[i]||"").trim());return o;});
+/* ---------- Excel 내보내기 ---------- */
+function svgToPng(svgEl){
+  return new Promise(resolve=>{
+    const box=document.getElementById("chartBox");
+    const W=box.clientWidth||980, H=box.clientHeight||320;
+    const bg=getComputedStyle(document.documentElement).getPropertyValue("--surface").trim()||"#ffffff";
+    const clone=svgEl.cloneNode(true);
+    clone.setAttribute("width",W);clone.setAttribute("height",H);
+    if(!clone.getAttribute("xmlns"))clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
+    // inline background
+    const bgRect=document.createElementNS("http://www.w3.org/2000/svg","rect");
+    bgRect.setAttribute("width",W);bgRect.setAttribute("height",H);bgRect.setAttribute("fill",bg);
+    clone.insertBefore(bgRect,clone.firstChild);
+    // replace external fonts to avoid canvas taint
+    clone.querySelectorAll("[font-family]").forEach(el=>el.setAttribute("font-family","Arial,sans-serif"));
+    const svgStr=new XMLSerializer().serializeToString(clone);
+    const blob=new Blob([svgStr],{type:"image/svg+xml;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const img=new Image();
+    const scale=2,canvas=document.createElement("canvas");
+    canvas.width=W*scale;canvas.height=H*scale;
+    const ctx=canvas.getContext("2d");ctx.scale(scale,scale);
+    img.onload=()=>{ctx.drawImage(img,0,0,W,H);URL.revokeObjectURL(url);resolve(canvas.toDataURL("image/png").split(",")[1]);};
+    img.onerror=()=>{URL.revokeObjectURL(url);resolve(null);};
+    img.src=url;
+  });
 }
-document.getElementById("uploadBtn").addEventListener("click",()=>document.getElementById("fileInput").click());
-document.getElementById("fileInput").addEventListener("change",e=>{
-  const f=e.target.files[0];if(!f)return;const r=new FileReader();
-  r.onload=()=>{try{loadCsv(parseCsv(r.result));document.querySelector(".pill").innerHTML=`<span class="dot"></span>${f.name}`;}catch(err){alert("CSV 형식을 확인해 주세요.\n"+err.message);}};
-  r.readAsText(f,"utf-8");
-});
-function loadCsv(rows){
-  const byC={};
-  rows.forEach(r=>{const c=(r.country||"ALL").trim().toUpperCase();(byC[c]=byC[c]||[]).push({
-    category:(r.category||"").trim(),netasset:+r.netasset||0,
-    flow_1w:+r.flow_1w||0,flow_1m:+r.flow_1m||0,flow_3m:+r.flow_3m||0,flow_6m:+r.flow_6m||0,flow_ytd:+r.flow_ytd||0,flow_1y:+r.flow_1y||0});});
-  if(!byC.ALL){const agg={};Object.values(byC).flat().forEach(r=>{if(!agg[r.category])agg[r.category]={...r};else ["netasset","flow_1w","flow_1m","flow_3m","flow_6m","flow_ytd","flow_1y"].forEach(k=>agg[r.category][k]+=r[k]);});byC.ALL=Object.values(agg);}
-  data=byC;state.enabled={};
-  const sel=document.getElementById("country");const keys=Object.keys(byC);
-  sel.innerHTML=keys.map(c=>`<option value="${c}">${C_LABEL[c]||c}</option>`).join("");
-  state.country=keys.includes("ALL")?"ALL":keys[0];sel.value=state.country;renderAll();
+
+async function exportExcel(){
+  const btn=document.getElementById("xlsxBtn");
+  btn.disabled=true;btn.textContent="저장 중…";
+  try{
+    const rows=curRows();
+    const total=rows.reduce((a,r)=>a+r.netasset,0);
+    const periods=["flow_1w","flow_1m","flow_3m","flow_6m","flow_ytd","flow_1y"];
+    const pLabels=["1W","1M","3M","6M","YTD","1Y"];
+    const su=uShort();
+    const isReturn=state.view==="return";
+    const country=C_LABEL[state.country]||state.country;
+
+    // chart image
+    const svgEl=document.getElementById("chartBox").querySelector("svg");
+    const chartBase64=svgEl?await svgToPng(svgEl):null;
+
+    const wb=new ExcelJS.Workbook();
+    const ws=wb.addWorksheet(`${country} 개요`);
+    ws.columns=[
+      {header:"자산군",width:14},{header:`순자산 (${su})`,width:14},{header:"비중 (%)",width:10},
+      ...pLabels.map(l=>({header:isReturn?`${l} 수익률 (%)`: `${l} (${su})`,width:12}))
+    ];
+
+    rows.forEach(r=>{
+      const pct=total?r.netasset/total*100:0;
+      const row=[r.category,+uScale(r.netasset).toFixed(2),+pct.toFixed(1)];
+      periods.forEach((p,i)=>row.push(isReturn?+pseudoReturn(r.category,p).toFixed(2):+uScale(r[p]).toFixed(2)));
+      ws.addRow(row);
+    });
+    if(!isReturn){
+      const trow=["합계",+uScale(total).toFixed(2),100];
+      periods.forEach(p=>trow.push(+uScale(rows.reduce((a,r)=>a+r[p],0)).toFixed(2)));
+      ws.addRow(trow);
+    }
+
+    // chart image below table
+    if(chartBase64){
+      ws.addRow([]);ws.addRow(["▼ 누적 자금흐름 차트"]);
+      const imgRow=ws.rowCount+1;
+      const imgId=wb.addImage({base64:chartBase64,extension:"png"});
+      const chartW=document.getElementById("chartBox").clientWidth||980;
+      const chartH=document.getElementById("chartBox").clientHeight||320;
+      ws.addImage(imgId,{tl:{col:0,row:imgRow-1},ext:{width:chartW,height:chartH}});
+      for(let i=0;i<18;i++)ws.addRow([]);
+    }
+
+    const buf=await wb.xlsx.writeBuffer();
+    const blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=url;a.download=`ETF_자금유출입_${country}.xlsx`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 9h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M9 9v12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 3v12m0 0l-3.5-3.5M12 15l3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Excel 다운로드`;
+  }
 }
-document.getElementById("tmplBtn").addEventListener("click",()=>{
-  const csv="date,country,category,netasset,flow_1w,flow_1m,flow_3m,flow_6m,flow_ytd,flow_1y\n"+
-    "2026-06-24,ALL,주식,12064535,12381,200936,353111,757261,511687,1345697\n"+
-    "2026-06-24,ALL,채권,2433215,8442,45412,122118,284296,226364,515936\n";
-  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));a.download="etf_flow_template.csv";a.click();
-});
+document.getElementById("xlsxBtn").addEventListener("click",exportExcel);
 
 /* ========== DETAIL PAGE ========== */
 function sumFlows(children,key){return children.reduce((a,c)=>a+c[key],0);}
 const PERIODS=["flow_1w","flow_1m","flow_3m","flow_6m","flow_ytd","flow_1y"];
+
+/* ---------- Excel 내보내기 (세부 분석) ---------- */
+const XLSX_BTN_ICON=`<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 9h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M9 9v12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 3v12m0 0l-3.5-3.5M12 15l3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Excel 다운로드`;
+async function exportDetailExcel(){
+  const btn=document.getElementById("xlsxBtnD");
+  btn.disabled=true;btn.textContent="저장 중…";
+  try{
+    const h=curNode();
+    const activeKey=curCatKey();
+    const su=uShort();
+    const isReturn=state.view==="return";
+    const periods=["flow_1w","flow_1m","flow_3m","flow_6m","flow_ytd","flow_1y"];
+    const pLabels=["1W","1M","3M","6M","YTD","1Y"];
+    const total=allLeaves(h).reduce((a,c)=>a+c.netasset,0);
+    const nameCol=detailAxis==="region"?"지역":"분류";
+
+    const wb=new ExcelJS.Workbook();
+    const ws=wb.addWorksheet(`${activeKey} 세부`);
+    ws.columns=[
+      {header:nameCol,width:18},{header:"세부항목",width:20},
+      {header:`순자산 (${su})`,width:14},{header:"비중 (%)",width:10},
+      ...pLabels.map(l=>({header:isReturn?`${l} 수익률 (%)`:`${l} (${su})`,width:12}))
+    ];
+
+    const addLeafRow=(groupName,leaf)=>{
+      const pct=total?leaf.netasset/total*100:0;
+      const row=[groupName,leaf.name,+uScale(leaf.netasset).toFixed(2),+pct.toFixed(1)];
+      periods.forEach(p=>row.push(isReturn?+pseudoReturn(leaf.name,p).toFixed(2):+uScale(leaf[p]).toFixed(2)));
+      ws.addRow(row);
+    };
+
+    if(h.flat){
+      h.leaves.forEach(leaf=>addLeafRow(activeKey,leaf));
+    }else{
+      h.groups.forEach(g=>{
+        const agg={name:g.name,netasset:g.children.reduce((a,c)=>a+c.netasset,0)};
+        periods.forEach(p=>agg[p]=sumFlows(g.children,p));
+        const gpct=total?agg.netasset/total*100:0;
+        const grow=[g.name,"(소계)",+uScale(agg.netasset).toFixed(2),+gpct.toFixed(1)];
+        periods.forEach(p=>grow.push(isReturn?"":+uScale(agg[p]).toFixed(2)));
+        const gr=ws.addRow(grow);gr.font={bold:true};
+        g.children.forEach(leaf=>addLeafRow(g.name,leaf));
+      });
+    }
+
+    const buf=await wb.xlsx.writeBuffer();
+    const blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=url;a.download=`ETF_세부분석_${activeKey}.xlsx`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }finally{
+    btn.disabled=false;btn.innerHTML=XLSX_BTN_ICON;
+  }
+}
+document.getElementById("xlsxBtnD").addEventListener("click",exportDetailExcel);
 /* return all leaf items whether category is grouped or flat */
 function allLeaves(h){return h.flat?h.leaves:h.groups.flatMap(g=>g.children);}
 /* axis-aware accessors */

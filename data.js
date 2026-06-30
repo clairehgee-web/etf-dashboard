@@ -13,11 +13,13 @@ const DEMO={
     {category:"크립토",netasset:125050,flow_1w:-908,flow_1m:-349,flow_3m:4566,flow_6m:2417,flow_ytd:2199,flow_1y:61339},
   ],
   US:[
-    {category:"주식",netasset:8200000,flow_1w:9800,flow_1m:150000,flow_3m:260000,flow_6m:560000,flow_ytd:380000,flow_1y:980000},
-    {category:"채권",netasset:1600000,flow_1w:6200,flow_1m:33000,flow_3m:90000,flow_6m:210000,flow_ytd:168000,flow_1y:380000},
-    {category:"상품",netasset:210000,flow_1w:18000,flow_1m:17000,flow_3m:30000,flow_6m:26000,flow_ytd:19000,flow_1y:48000},
-    {category:"크립토",netasset:98000,flow_1w:-600,flow_1m:-200,flow_3m:3400,flow_6m:1800,flow_ytd:1600,flow_1y:48000},
-    {category:"부동산",netasset:60000,flow_1w:70,flow_1m:640,flow_3m:860,flow_6m:2900,flow_ytd:1040,flow_1y:4300},
+    {category:"주식",netasset:12064535,flow_1w:12381,flow_1m:200936,flow_3m:353111,flow_6m:757261,flow_ytd:511687,flow_1y:1345697},
+    {category:"채권",netasset:2433215,flow_1w:8442,flow_1m:45412,flow_3m:122118,flow_6m:284296,flow_ytd:226364,flow_1y:515936},
+    {category:"자산배분",netasset:41855,flow_1w:192,flow_1m:967,flow_3m:3863,flow_6m:7344,flow_ytd:6013,flow_1y:13363},
+    {category:"상품",netasset:331603,flow_1w:26762,flow_1m:25729,flow_3m:43655,flow_6m:38841,flow_ytd:28448,flow_1y:70399},
+    {category:"부동산",netasset:92084,flow_1w:109,flow_1m:971,flow_3m:1298,flow_6m:4339,flow_ytd:1574,flow_1y:6458},
+    {category:"대체투자/기타",netasset:30080,flow_1w:302,flow_1m:1397,flow_3m:4519,flow_6m:6885,flow_ytd:6164,flow_1y:10658},
+    {category:"크립토",netasset:125050,flow_1w:-908,flow_1m:-349,flow_3m:4566,flow_6m:2417,flow_ytd:2199,flow_1y:61339},
   ],
   HK:[
     {category:"주식",netasset:1900000,flow_1w:1500,flow_1m:28000,flow_3m:52000,flow_6m:110000,flow_ytd:78000,flow_1y:210000},
