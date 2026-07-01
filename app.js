@@ -546,34 +546,34 @@ function openPanel(leaf,groupName){
   const h=curNode(),color=h.color,catKey=curCatKey();
   document.getElementById("pEyebrow").innerHTML=`<i style="background:${color}"></i>${h.flat?catKey:catKey+" · "+groupName}`;
   document.getElementById("pName").textContent=leaf.name;
+  document.getElementById("pUnitSel").value=unit;
+  document.getElementById("pPeriodSel").value=pPeriod;
+
   const total=allLeaves(h).reduce((a,c)=>a+c.netasset,0);
   const pct=(leaf.netasset/total*100).toFixed(2);
-  document.getElementById("pSub").textContent=`순자산 ${fmt(leaf.netasset)} ${uLabel()} · 비중 ${pct}%`;
+
+  const daily=buildDaily(leaf,pPeriod);
+  const latest=daily[0];
 
   document.getElementById("pStats").innerHTML=[
     {l:"순자산",v:fmt(leaf.netasset)+`<span style='font-size:11px;color:var(--ink-3)'> ${uShort()}</span>`},
     {l:"비중",v:pct+"<span style='font-size:11px;color:var(--ink-3)'> %</span>"},
-    {l:"YTD 순유입",v:`<span style="color:${leaf.flow_ytd>=0?'var(--inflow)':'var(--outflow)'}">${leaf.flow_ytd>=0?"+":""}${fmt(leaf.flow_ytd)}</span>`},
-    {l:"1Y 순유입",v:`<span style="color:${leaf.flow_1y>=0?'var(--inflow)':'var(--outflow)'}">${leaf.flow_1y>=0?"+":""}${fmt(leaf.flow_1y)}</span>`},
+    {l:"당일 자금유출입",v:`<span style="color:${latest.daily>=0?'var(--inflow)':'var(--outflow)'}">${latest.daily>=0?"+":""}${fmt(latest.daily)}</span>`},
+    {l:"누적 자금유출입",v:`<span style="color:${latest.cum>=0?'var(--inflow)':'var(--outflow)'}">${latest.cum>=0?"+":""}${fmt(latest.cum)}</span>`},
   ].map(s=>`<div class="stat"><div class="l">${s.l}</div><div class="v num">${s.v}</div></div>`).join("");
 
-  // panel chart
-  const series=buildSeries(Math.max(0,leaf.flow_1y*2.2));
-  drawPanelChart(series,color);
+  drawComboChart(daily.slice().reverse(),color,"pChart");
 
-  // flow bars
-  const labels={flow_1w:"1W",flow_1m:"1M",flow_3m:"3M",flow_6m:"6M",flow_ytd:"YTD",flow_1y:"1Y"};
-  const maxAbs=Math.max(...PERIODS.map(p=>Math.abs(leaf[p])))||1;
-  document.getElementById("pFlows").innerHTML=PERIODS.map(p=>{
-    const v=leaf[p],w=Math.abs(v)/maxAbs*100,pos=v>=0;
-    return `<div class="flowbar"><span class="pl">${labels[p]}</span>
-      <span class="track"><i style="width:${w}%;background:${pos?'var(--inflow)':'var(--outflow)'}"></i></span>
-      <span class="vl" style="color:${pos?'var(--inflow)':'var(--outflow)'}">${pos?"+":""}${fmt(v)}</span></div>`;
-  }).join("");
+  document.getElementById("pRows").innerHTML=daily.map(d=>`
+    <tr><td>${d.fulldate}</td>
+      <td>${fmt(d.asset)}</td>
+      <td style="color:${d.daily>=0?'var(--inflow)':'var(--outflow)'};font-weight:600">${d.daily>=0?"+":""}${fmt(d.daily)}</td>
+      <td style="color:${d.cum>=0?'var(--inflow)':'var(--outflow)'};font-weight:600">${d.cum>=0?"+":""}${fmt(d.cum)}</td></tr>`).join("");
 
-  // period return bar chart (임의 수치)
+  const pLabels={flow_1w:"1W",flow_1m:"1M",flow_3m:"3M",flow_6m:"6M",flow_ytd:"YTD",flow_1y:"1Y"};
   const returns=PERIODS.map(p=>pseudoReturn(leaf.name,p));
-  drawReturnChart(returns,PERIODS.map(p=>labels[p]));
+  drawReturnChart(returns,PERIODS.map(p=>pLabels[p]),"pReturnChart");
+  renderTopFlows(catKey,pPeriod,"pTopFlows");
 
   document.getElementById("scrim").classList.add("on");
   document.getElementById("panel").classList.add("on");
@@ -585,6 +585,18 @@ function closePanel(){
 }
 document.getElementById("panelClose").addEventListener("click",closePanel);
 document.getElementById("scrim").addEventListener("click",()=>{closePanel();closeAssetPanel();});
+document.getElementById("pPeriodSel").addEventListener("change",e=>{
+  pPeriod=e.target.value;
+  if(lastLeaf)openPanel(lastLeaf.leaf,lastLeaf.group);
+});
+document.getElementById("pUnitSel").addEventListener("change",e=>{
+  unit=e.target.value;
+  document.getElementById("unitSel").value=e.target.value;
+  document.getElementById("unitNote").textContent="단위 "+uLabel();
+  document.getElementById("treeUnitNote").textContent="단위 "+uLabel();
+  rerenderActive();
+  if(lastLeaf)openPanel(lastLeaf.leaf,lastLeaf.group);
+});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closePanel();closeAssetPanel();}});
 
 /* ========== ASSET PANEL (overview) ========== */
@@ -592,6 +604,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"){closePanel();closeA
 const AP_PERIOD_DAYS={flow_1w:7,flow_1m:30,flow_3m:91,flow_6m:182,flow_ytd:175,flow_1y:365};
 const AP_PERIOD_BDAYS={flow_1w:5,flow_1m:22,flow_3m:66,flow_6m:130,flow_ytd:125,flow_1y:252};
 let apPeriod="flow_1m";
+let pPeriod="flow_1m";
 
 function buildDaily(row,period="flow_1m"){
   const days=AP_PERIOD_DAYS[period];
@@ -625,7 +638,6 @@ function openAssetPanel(cat){
   document.getElementById("apUnitSel").value=unit;
   document.getElementById("apEyebrow").innerHTML=`<i style="background:${color}"></i>${C_LABEL[state.country]||state.country}`;
   document.getElementById("apName").textContent=cat;
-  document.getElementById("apSub").textContent=`순자산 ${fmt(row.netasset)} ${uLabel()} · 비중 ${pct}%`;
 
   const daily=buildDaily(row,apPeriod);
   const latest=daily[0];
@@ -647,10 +659,36 @@ function openAssetPanel(cat){
   const apLabels={flow_1w:"1W",flow_1m:"1M",flow_3m:"3M",flow_6m:"6M",flow_ytd:"YTD",flow_1y:"1Y"};
   const apReturns=PERIODS.map(p=>pseudoReturn(cat,p));
   drawReturnChart(apReturns,PERIODS.map(p=>apLabels[p]),"apReturnChart");
+  renderTopFlows(cat,apPeriod);
 
   document.getElementById("scrim").classList.add("on");
   document.getElementById("apanel").classList.add("on");
 }
+function renderTopFlows(cat,period,containerId="apTopFlows"){
+  const el=document.getElementById(containerId);if(!el)return;
+  const tickers=(TICKER_DATA&&TICKER_DATA[cat])||[];
+  if(!tickers.length){el.innerHTML='<div style="color:var(--ink-3);font-size:12px;padding:8px 0">종목 데이터 없음</div>';return;}
+  const byFlow=[...tickers].sort((a,b)=>b[period]-a[period]);
+  const inflows=byFlow.filter(t=>t[period]>0).slice(0,5);
+  const outflows=[...tickers].sort((a,b)=>a[period]-b[period]).filter(t=>t[period]<0).slice(0,5);
+  const makeTable=(items,isIn)=>{
+    const col=isIn?'var(--inflow)':'var(--outflow)';
+    const lbl=isIn?'자금유입 상위':'자금유출 상위';
+    const rows=items.map((t,i)=>`<tr>
+      <td>${i+1}</td><td>${t.ticker}</td><td>${t.name}</td>
+      <td style="color:${col};font-weight:600">${t[period]>=0?'+':''}${fmt(t[period])}</td></tr>`).join('');
+    return `<div class="top-flows-section">
+      <div class="top-flows-label" style="color:${col}">
+        <span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0"></span>${lbl}
+      </div>
+      <table class="ranktable">
+        <thead><tr><th>#</th><th>티커</th><th>종목명</th><th>누적</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>`;
+  };
+  el.innerHTML=makeTable(inflows,true)+makeTable(outflows,false);
+}
+
 function closeAssetPanel(){
   document.getElementById("scrim").classList.remove("on");
   document.getElementById("apanel").classList.remove("on");

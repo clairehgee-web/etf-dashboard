@@ -237,8 +237,8 @@ function drawPanelChart(series,color){
 }
 
 /* combo chart: 누적 bars (left axis) + 당일 line (right axis) */
-function drawComboChart(series,color){
-  const box=document.getElementById("apChart");
+function drawComboChart(series,color,containerId="apChart"){
+  const box=document.getElementById(containerId);
   const W=box.clientWidth||540,H=box.clientHeight||200;
   const m={t:10,r:46,b:24,l:46},iw=W-m.l-m.r,ih=H-m.t-m.b,n=series.length;
   const accent=getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
