@@ -241,6 +241,7 @@ function applyUnit(u){
   if(document.getElementById("apanel").classList.contains("on")&&lastAssetCat)openAssetPanel(lastAssetCat);
   if(document.getElementById("panel").classList.contains("on")&&lastLeaf)openPanel(lastLeaf.leaf,lastLeaf.group);
   document.getElementById("unitNote").textContent="단위 "+uLabel();
+  document.getElementById("treeUnitNote").textContent="단위 "+uLabel();
 }
 function applyView(v){state.view=v;syncSegs();rerenderActive();}
 function applyPeriod(p){state.period=p;syncSegs();rerenderActive();}
@@ -262,7 +263,6 @@ document.querySelectorAll("#axisSeg button").forEach(b=>b.addEventListener("clic
   document.querySelectorAll("#axisSeg button").forEach(x=>x.classList.remove("on"));b.classList.add("on");
   detailAxis=b.dataset.axis;openGroups={};selectedLeaf=null;
   document.getElementById("treeHeadCol").textContent=detailAxis==="region"?"지역 · 국가":"분류 · 세부항목";
-  document.getElementById("treeHint").textContent=detailAxis==="region"?"국가를 클릭하면 상세 추이를 볼 수 있습니다":"세부항목을 클릭하면 상세 추이를 볼 수 있습니다";
   renderCatTabs();renderTree();
 }));
 window.addEventListener("resize",()=>{if(chartData&&chartData.bar)drawBarChart();else drawChart();});
@@ -502,7 +502,7 @@ function renderTree(){
       lr.addEventListener("click",e=>{e.stopPropagation();openPanel(leaf,activeKey);});
       tb.appendChild(lr);
     });
-    document.getElementById("treeNote").textContent=`${activeKey} · ${h.leaves.length}개 세부항목`;
+    document.getElementById("treeNote").textContent=detailAxis==="region"?"지역·국가명을 클릭하면 상세 내용을 확인할 수 있습니다.":"세부항목을 클릭하면 항목별 상세 내용을 확인할 수 있습니다.";
     return;
   }
 
@@ -536,7 +536,7 @@ function renderTree(){
     });
   });
   const unitWord=detailAxis==="region"?"지역":"중분류";
-  document.getElementById("treeNote").textContent=`${activeKey} · ${h.groups.length}개 ${unitWord} · ${leafCount}개 ${detailAxis==="region"?"국가":"세부항목"}`;
+  document.getElementById("treeNote").textContent=detailAxis==="region"?"지역·국가명을 클릭하면 상세 내용을 확인할 수 있습니다.":"세부항목을 클릭하면 항목별 상세 내용을 확인할 수 있습니다.";
 }
 
 /* ---- slide-over panel ---- */
@@ -671,5 +671,7 @@ document.getElementById("apUnitSel").addEventListener("change",e=>{
 /* ---------- init ---------- */
 function renderAll(){renderKpis();renderTable();renderChart();}
 document.getElementById("lastUpdate").textContent="최종 업데이트 · 2026-06-24";
+document.getElementById("treeLastUpdate").textContent="최종 업데이트 · 2026-06-24";
 document.getElementById("unitNote").textContent="단위 "+uLabel();
+document.getElementById("treeUnitNote").textContent="단위 "+uLabel();
 renderAll();
