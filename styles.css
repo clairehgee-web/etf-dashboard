@@ -262,7 +262,7 @@
   .scrim{position:fixed;inset:0;background:rgba(8,11,18,.42);opacity:0;pointer-events:none;transition:opacity .3s;z-index:40;backdrop-filter:blur(2px);}
   .scrim.on{opacity:1;pointer-events:auto;}
   .panel{
-    position:fixed;top:0;right:0;height:100%;width:440px;max-width:92vw;background:var(--surface);
+    position:fixed;top:0;right:0;height:100%;width:580px;max-width:92vw;background:var(--surface);
     box-shadow:-12px 0 40px rgba(8,11,18,.18);z-index:41;transform:translateX(100%);
     transition:transform .34s cubic-bezier(.3,.8,.3,1);display:flex;flex-direction:column;border-left:1px solid var(--line);
   }

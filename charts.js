@@ -189,7 +189,7 @@ function drawReturnChart(returns,labels,containerId="pReturnChart"){
   const box=document.getElementById(containerId);
   if(!box)return;
   const W=box.clientWidth||390,H=box.clientHeight||150;
-  const m={t:14,r:8,b:20,l:34},iw=W-m.l-m.r,ih=H-m.t-m.b,n=returns.length;
+  const m={t:14,r:8,b:30,l:34},iw=W-m.l-m.r,ih=H-m.t-m.b,n=returns.length;
   const inAccent=getComputedStyle(document.documentElement).getPropertyValue("--inflow").trim();
   const outAccent=getComputedStyle(document.documentElement).getPropertyValue("--outflow").trim();
   const grid=getComputedStyle(document.documentElement).getPropertyValue("--grid").trim();

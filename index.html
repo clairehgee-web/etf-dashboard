@@ -195,10 +195,31 @@
       <div class="eyebrow" id="apEyebrow"></div>
       <h2 id="apName"></h2>
       <div class="sub" id="apSub"></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+        <div class="field">
+          <span>단위</span>
+          <select id="apUnitSel">
+            <option value="trillion">조 달러</option>
+            <option value="billion">십억 달러</option>
+            <option value="million" selected>백만 달러</option>
+            <option value="thousand">천 달러</option>
+          </select>
+        </div>
+      </div>
     </div>
     <div class="panel-body">
       <div class="stat-grid" id="apStats"></div>
-      <div class="panel-sec-title">누적 자금유출입 · 순자산 추이</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0">
+        <div class="panel-sec-title" style="margin:0">누적 자금유출입 · 순자산 추이</div>
+        <select id="apPeriodSel" style="font-size:11.5px;padding:4px 22px 4px 8px;border-radius:8px;">
+          <option value="flow_1w">1W</option>
+          <option value="flow_1m" selected>1M</option>
+          <option value="flow_3m">3M</option>
+          <option value="flow_6m">6M</option>
+          <option value="flow_ytd">YTD</option>
+          <option value="flow_1y">1Y</option>
+        </select>
+      </div>
       <div class="combo-legend">
         <span><i class="bar" style="background:var(--accent)"></i>누적 자금유출입 (좌)</span>
         <span><i style="background:var(--accent-2)"></i>순자산 (우)</span>

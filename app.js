@@ -589,23 +589,30 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"){closePanel();closeA
 
 /* ========== ASSET PANEL (overview) ========== */
 /* generate daily series: 순자산, 당일(증감), 누적 */
-function buildDaily(row,days=24){
+const AP_PERIOD_DAYS={flow_1w:7,flow_1m:30,flow_3m:91,flow_6m:182,flow_ytd:175,flow_1y:365};
+const AP_PERIOD_BDAYS={flow_1w:5,flow_1m:22,flow_3m:66,flow_6m:130,flow_ytd:125,flow_1y:252};
+let apPeriod="flow_1m";
+
+function buildDaily(row,period="flow_1m"){
+  const days=AP_PERIOD_DAYS[period];
+  const bdays=AP_PERIOD_BDAYS[period];
   const baseAsset=row.netasset;
-  const dailyAvg=row.flow_1m/22; // approx daily flow from 1M
+  const dailyAvg=row[period]/bdays;
   const out=[];let cum=0;
-  const start=new Date(2026,4,18);
+  const end=new Date(2026,5,24);
   for(let i=0;i<days;i++){
-    const d=new Date(start);d.setDate(d.getDate()-(days-1-i));
-    // pseudo-random daily change around dailyAvg
-    const wobble=Math.sin(i*1.7)*dailyAvg*1.6 + Math.cos(i*0.6)*dailyAvg*0.8;
+    const d=new Date(end);d.setDate(d.getDate()-(days-1-i));
+    const wobble=Math.sin(i*1.3)*dailyAvg*1.8 + Math.cos(i*0.5)*dailyAvg*0.9;
     const daily=Math.round(dailyAvg+wobble);
     cum+=daily;
-    const asset=Math.round(baseAsset - (row.flow_1m) + cum); // asset grows with cum flow
-    out.push({date:`${String(d.getFullYear()).slice(-2)}/${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}`,
-      fulldate:`2026-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`,
-      asset, daily, cum});
+    const asset=Math.round(baseAsset - row[period] + cum);
+    out.push({
+      date:`${String(d.getFullYear()).slice(-2)}/${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}`,
+      fulldate:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`,
+      asset, daily, cum
+    });
   }
-  return out.reverse(); // latest first for table
+  return out.reverse();
 }
 
 function openAssetPanel(cat){
@@ -615,11 +622,12 @@ function openAssetPanel(cat){
   const total=curRows().reduce((a,r)=>a+r.netasset,0);
   const pct=(row.netasset/total*100).toFixed(2);
 
+  document.getElementById("apUnitSel").value=unit;
   document.getElementById("apEyebrow").innerHTML=`<i style="background:${color}"></i>${C_LABEL[state.country]||state.country}`;
   document.getElementById("apName").textContent=cat;
   document.getElementById("apSub").textContent=`순자산 ${fmt(row.netasset)} ${uLabel()} · 비중 ${pct}%`;
 
-  const daily=buildDaily(row);
+  const daily=buildDaily(row,apPeriod);
   const latest=daily[0];
   document.getElementById("apStats").innerHTML=[
     {l:"순자산",v:fmt(row.netasset)+`<span style='font-size:11px;color:var(--ink-3)'> ${uShort()}</span>`},
@@ -648,6 +656,17 @@ function closeAssetPanel(){
   document.getElementById("apanel").classList.remove("on");
 }
 document.getElementById("apanelClose").addEventListener("click",closeAssetPanel);
+document.getElementById("apPeriodSel").addEventListener("change",e=>{
+  apPeriod=e.target.value;
+  if(lastAssetCat)openAssetPanel(lastAssetCat);
+});
+document.getElementById("apUnitSel").addEventListener("change",e=>{
+  unit=e.target.value;
+  document.getElementById("unitSel").value=e.target.value;
+  document.getElementById("unitNote").textContent="단위 "+uLabel();
+  renderTable();
+  if(lastAssetCat)openAssetPanel(lastAssetCat);
+});
 
 /* ---------- init ---------- */
 function renderAll(){renderKpis();renderTable();renderChart();}
