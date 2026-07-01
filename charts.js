@@ -13,6 +13,34 @@ function monthLabels(n=24){
   for(let i=n-1;i>=0;i--){const d=new Date(now);d.setMonth(d.getMonth()-i);out.push(`${d.getMonth()+1}월`);}
   return out;
 }
+function periodLabels(period){
+  const now=new Date(2026,5,24);
+  const dn=['일','월','화','수','목','금','토'];
+  const fmtD=d=>`${d.getMonth()+1}/${d.getDate()}`;
+
+  // 1W: 요일 레이블 (7일)
+  if(period==='flow_1w'){
+    return Array.from({length:7},(_,i)=>{
+      const d=new Date(now);d.setDate(d.getDate()-(6-i));return dn[d.getDay()];
+    });
+  }
+  // 6M: 12월~6월 월별 (7포인트)
+  if(period==='flow_6m') return monthLabels(7);
+  // YTD: 1월~현재월
+  if(period==='flow_ytd') return monthLabels(now.getMonth()+1);
+  // 1Y: 최근 12개월
+  if(period==='flow_1y') return monthLabels(12);
+
+  // 1M·3M: 최종업데이트일 기준 시작일부터 M/D 날짜 레이블
+  const monthsBack=period==='flow_1m'?-1:-3;
+  const n=period==='flow_1m'?5:7;
+  const start=new Date(now);start.setMonth(start.getMonth()+monthsBack);
+  const totalDays=Math.round((now-start)/864e5);
+  return Array.from({length:n},(_,i)=>{
+    const d=new Date(start);d.setDate(d.getDate()+Math.round(totalDays*i/(n-1)));
+    return fmtD(d);
+  });
+}
 
 function miniSpark(values,color){
   const w=88,h=34,max=Math.max(...values),min=Math.min(...values);
@@ -157,8 +185,8 @@ function drawChart(){
 }
 
 /* 기간별 수익률 — 양/음 막대 차트 */
-function drawReturnChart(returns,labels){
-  const box=document.getElementById("pReturnChart");
+function drawReturnChart(returns,labels,containerId="pReturnChart"){
+  const box=document.getElementById(containerId);
   if(!box)return;
   const W=box.clientWidth||390,H=box.clientHeight||150;
   const m={t:14,r:8,b:20,l:34},iw=W-m.l-m.r,ih=H-m.t-m.b,n=returns.length;

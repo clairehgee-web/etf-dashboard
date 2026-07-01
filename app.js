@@ -9,6 +9,7 @@ let lastLeaf=null;       // {leaf, group}
 let state={country:"US",view:"flow",period:"flow_3m",enabled:{}};
 const PERIOD_SCALE={flow_1w:60,flow_1m:14,flow_3m:8,flow_6m:5,flow_ytd:6,flow_1y:2.2};
 const PERIOD_LABEL={flow_1w:"최근 1주",flow_1m:"최근 1개월",flow_3m:"최근 3개월",flow_6m:"최근 6개월",flow_ytd:"연초 이후",flow_1y:"최근 1년"};
+const PERIOD_SHORT={flow_1w:"1W",flow_1m:"1M",flow_3m:"3M",flow_6m:"6M",flow_ytd:"YTD",flow_1y:"1Y"};
 const C_LABEL={US:"미국",HK:"홍콩",JP:"일본"};
 
 /* ---- currency unit system (base data is in MILLIONS of USD) ---- */
@@ -72,13 +73,13 @@ function renderKpis(){
     {label:"총 순자산",icon:'<path d="M3 13h4l3 6 4-14 3 8h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
      value:fmtCompact(totalAsset),suf:uShort(),delta:"전월 대비 +1.8%",dir:"up",sub:"",
      spark:miniSpark(buildSeries(totalAsset).slice(-12),assetAccent)},
-    {label:`순유입 (${PERIOD_LABEL[state.period]})`,icon:'<path d="M12 19V5m0 0l-6 6m6-6l6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+    {label:`순유입 (${PERIOD_SHORT[state.period]})`,icon:'<path d="M12 19V5m0 0l-6 6m6-6l6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
      value:fmt(netIn),suf:uShort(),delta:netIn>=0?"순유입 우위":"순유출 우위",dir:netIn>=0?"up":"down",sub:"",
      spark:miniSpark(buildSeries(Math.abs(netIn)).slice(-12),netIn>=0?inAccent:outAccent)},
-    {label:"자금흐름 집중도",icon:'<circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 12V5a7 7 0 016 3.5z" fill="currentColor"/>',
-     value:concentration.toFixed(1),suf:"%",delta:top?`${top.category} 비중`:"-",dir:"up",sub:"전체 유입 중",
+    {label:`자금흐름 집중도 (${PERIOD_SHORT[state.period]})`,icon:'<circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 12V5a7 7 0 016 3.5z" fill="currentColor"/>',
+     value:concentration.toFixed(1),suf:"%",delta:top?`${top.category} 비중`:"-",dir:"up",sub:"전체 유입 중",subFirst:true,
      spark:miniSpark(buildSeries(concentration).slice(-12),assetAccent)},
-    {label:"최다 유입 자산",icon:'<circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2" fill="none"/><path d="M5 21c0-4 3-6 7-6s7 2 7 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>',
+    {label:`최다 유입 자산 (${PERIOD_SHORT[state.period]})`,icon:'<circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2" fill="none"/><path d="M5 21c0-4 3-6 7-6s7 2 7 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>',
      value:top?top.category:"-",suf:"",delta:top?`+${fmt(top[state.period])} ${uShort()}`:"",dir:"up",sub:"",
      spark:top?miniSpark(buildSeries(top[state.period]).slice(-12),COLORS[top.category]||assetAccent):""},
   ];
@@ -87,7 +88,7 @@ function renderKpis(){
     <div class="kpi reveal">
       <div class="label"><span class="ic">${svg(c.icon)}</span>${c.label}</div>
       <div class="value num">${c.value}${c.suf?`<span class="suf">${c.suf}</span>`:""}</div>
-      <div class="delta ${c.dir}">${arrow(c.dir)}<span>${c.delta}</span>${c.sub?`<span class="sub">${c.sub}</span>`:""}</div>
+      <div class="delta ${c.dir}">${arrow(c.dir)}${c.subFirst&&c.sub?`<span class="sub">${c.sub}</span>`:""}<span>${c.delta}</span>${!c.subFirst&&c.sub?`<span class="sub">${c.sub}</span>`:""}</div>
       ${c.spark}
     </div>`).join("");
 }
@@ -169,7 +170,7 @@ function renderTable(){
       (onCount>0&&onCount<total)?"M6 12h12":"M5 13l4 4L19 7");
   }
 
-  document.getElementById("rowNote").textContent=`${rows.length}개 자산군 · ${C_LABEL[state.country]||state.country} · 체크박스는 차트 표시, 자산군명 클릭은 상세`;
+  document.getElementById("rowNote").textContent="자산명을 클릭하면 자산별 상세 내용을 확인 할 수 있습니다.";
 }
 
 /* ---------- chart (SVG area + line) ---------- */
@@ -193,11 +194,12 @@ function renderChart(){
     drawBarChart();
     return;
   }
-  const labels=monthLabels();
+  const labels=periodLabels(state.period);
+  const n=labels.length;
   const scale=PERIOD_SCALE[state.period]||8;
   const datasets=rows.map(r=>({
     name:r.category,color:COLORS[r.category]||"#888",
-    data:buildSeries(Math.max(0,r[state.period]*scale))
+    data:buildSeries(Math.max(0,r[state.period]*scale),n)
   }));
   chartData={datasets,labels,isReturn:false,bar:false};
   document.getElementById("chartSub").textContent=`선택 자산군 · ${PERIOD_LABEL[state.period]} 기준 · 누적 자금흐름`;
@@ -599,7 +601,7 @@ function buildDaily(row,days=24){
     const daily=Math.round(dailyAvg+wobble);
     cum+=daily;
     const asset=Math.round(baseAsset - (row.flow_1m) + cum); // asset grows with cum flow
-    out.push({date:`${d.getMonth()+1}/${String(d.getDate()).padStart(2,"0")}`,
+    out.push({date:`${String(d.getFullYear()).slice(-2)}/${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}`,
       fulldate:`2026-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`,
       asset, daily, cum});
   }
@@ -613,7 +615,7 @@ function openAssetPanel(cat){
   const total=curRows().reduce((a,r)=>a+r.netasset,0);
   const pct=(row.netasset/total*100).toFixed(2);
 
-  document.getElementById("apEyebrow").innerHTML=`<i style="background:${color}"></i>${C_LABEL[state.country]||state.country} · 자산군`;
+  document.getElementById("apEyebrow").innerHTML=`<i style="background:${color}"></i>${C_LABEL[state.country]||state.country}`;
   document.getElementById("apName").textContent=cat;
   document.getElementById("apSub").textContent=`순자산 ${fmt(row.netasset)} ${uLabel()} · 비중 ${pct}%`;
 
@@ -633,6 +635,10 @@ function openAssetPanel(cat){
       <td>${fmt(d.asset)}</td>
       <td style="color:${d.daily>=0?'var(--inflow)':'var(--outflow)'};font-weight:600">${d.daily>=0?"+":""}${fmt(d.daily)}</td>
       <td style="color:${d.cum>=0?'var(--inflow)':'var(--outflow)'};font-weight:600">${d.cum>=0?"+":""}${fmt(d.cum)}</td></tr>`).join("");
+
+  const apLabels={flow_1w:"1W",flow_1m:"1M",flow_3m:"3M",flow_6m:"6M",flow_ytd:"YTD",flow_1y:"1Y"};
+  const apReturns=PERIODS.map(p=>pseudoReturn(cat,p));
+  drawReturnChart(apReturns,PERIODS.map(p=>apLabels[p]),"apReturnChart");
 
   document.getElementById("scrim").classList.add("on");
   document.getElementById("apanel").classList.add("on");
