@@ -57,7 +57,7 @@ const fmt=n=>{
 };
 /* compact: same scaling, used for KPI/cat headline */
 const fmtCompact=n=>fmt(n);
-function ensureEnabled(rows){rows.forEach(r=>{if(!(r.category in state.enabled))state.enabled[r.category]=(r.category==="주식"||r.category==="채권");});}
+function ensureEnabled(rows){rows.forEach(r=>{if(!(r.category in state.enabled))state.enabled[r.category]=(r.category==="주식"||r.category==="채권"||r.category==="자산배분"||r.category==="상품");});}
 
 /* ---------- KPI cards ---------- */
 function renderKpis(){
@@ -191,11 +191,11 @@ function renderChart(){
       data:PERIODS.map(p=>pseudoReturn(r.category,p))
     }));
     chartData={datasets,labels:pLabels,isReturn:true,bar:true};
-    document.getElementById("chartSub").textContent=`선택 자산군 · 기간별 수익률`;
+    document.getElementById("chartSub").textContent=`${C_LABEL[state.country]||state.country} · 기간별 수익률`;
     document.getElementById("legend").innerHTML=datasets.map(d=>{
       const v=d.data[PERIODS.indexOf(state.period)];
       return `<span><i style="background:${d.color}"></i>${d.name} <b class="num">${v>=0?"+":""}${v.toFixed(2)}%</b></span>`;
-    }).join("")||`<span style="color:var(--ink-3)">표시할 자산군을 선택하세요</span>`;
+    }).join("")||`<span style="color:var(--ink-3)">표시할 자산을 선택하세요</span>`;
     drawBarChart();
     return;
   }
@@ -216,11 +216,11 @@ function renderChart(){
       data:filtered.map(d=>d[r.category]||0)
     }));
     chartData={datasets:rdatasets,labels:rlabels,isReturn:false,bar:false};
-    document.getElementById("chartSub").textContent=`미국 자산군 · ${PERIOD_LABEL[state.period]} 기준 · 누적 자금유출입`;
+    document.getElementById("chartSub").textContent=`${C_LABEL[state.country]||state.country} · ${PERIOD_LABEL[state.period]} 기준`;
     document.getElementById("legend").innerHTML=rdatasets.map(d=>{
       const last=d.data[d.data.length-1];
       return `<span><i style="background:${d.color}"></i>${d.name} <b class="num">${fmt(last)} ${uShort()}</b></span>`;
-    }).join("")||`<span style="color:var(--ink-3)">표시할 자산군을 선택하세요</span>`;
+    }).join("")||`<span style="color:var(--ink-3)">표시할 자산을 선택하세요</span>`;
     drawChart();
     return;
   }
@@ -232,11 +232,11 @@ function renderChart(){
     data:buildSeries(Math.max(0,r[state.period]*scale),n)
   }));
   chartData={datasets,labels,isReturn:false,bar:false};
-  document.getElementById("chartSub").textContent=`선택 자산군 · ${PERIOD_LABEL[state.period]} 기준 · 누적 자금흐름`;
+  document.getElementById("chartSub").textContent=`${C_LABEL[state.country]||state.country} · ${PERIOD_LABEL[state.period]} 기준`;
   document.getElementById("legend").innerHTML=datasets.map(d=>{
     const last=d.data[d.data.length-1];
     return `<span><i style="background:${d.color}"></i>${d.name} <b class="num">${fmt(last)} ${uShort()}</b></span>`;
-  }).join("")||`<span style="color:var(--ink-3)">표시할 자산군을 선택하세요</span>`;
+  }).join("")||`<span style="color:var(--ink-3)">표시할 자산을 선택하세요</span>`;
   drawChart();
 }
 
@@ -738,7 +738,7 @@ document.getElementById("apUnitSel").addEventListener("change",e=>{
 
 /* ---------- init ---------- */
 function renderAll(){renderKpis();renderTable();renderChart();}
-document.getElementById("lastUpdate").textContent="최종 업데이트 · 2026-06-24";
+document.getElementById("lastUpdate").textContent="최종 업데이트 · 2026-06-30";
 document.getElementById("treeLastUpdate").textContent="최종 업데이트 · 2026-06-24";
 document.getElementById("unitNote").textContent="단위 "+uLabel();
 document.getElementById("treeUnitNote").textContent="단위 "+uLabel();
