@@ -1,9 +1,9 @@
 /* ===== 상수 & 유틸리티 ===== */
 const UNITS = {
-  trillion: {label:"조 달러", short:"조",   factor:1000000},
-  billion:  {label:"십억 달러",short:"십억", factor:1000},
-  million:  {label:"백만 달러",short:"백만", factor:1},
-  thousand: {label:"천 달러",  short:"천",   factor:0.001},
+  trillion: {label:"조 달러", short:"조",   factor:1000000000},
+  billion:  {label:"십억 달러",short:"십억", factor:1000000},
+  million:  {label:"백만 달러",short:"백만", factor:1000},
+  thousand: {label:"천 달러",  short:"천",   factor:1},
 };
 const PERIODS = ["flow_1w","flow_1m","flow_3m","flow_6m","flow_ytd","flow_1y"];
 const AP_PERIOD_DAYS  = {flow_1w:7,flow_1m:30,flow_3m:91,flow_6m:182,flow_ytd:175,flow_1y:365};

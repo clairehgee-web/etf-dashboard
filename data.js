@@ -2,37 +2,34 @@ const COLORS={
   "주식":"#3a36c9","채권":"#15b8b0","자산배분":"#e0973c","상품":"#9b6fc0",
   "부동산":"#3d8fb5","대체투자/기타":"#7d8a99","크립토":"#d4a32f"
 };
+/* base unit: 천 달러 (thousands USD) */
 const DEMO={
-  ALL:[
-    {category:"주식",netasset:12064535,flow_1w:12381,flow_1m:200936,flow_3m:353111,flow_6m:757261,flow_ytd:511687,flow_1y:1345697},
-    {category:"채권",netasset:2433215,flow_1w:8442,flow_1m:45412,flow_3m:122118,flow_6m:284296,flow_ytd:226364,flow_1y:515936},
-    {category:"자산배분",netasset:41855,flow_1w:192,flow_1m:967,flow_3m:3863,flow_6m:7344,flow_ytd:6013,flow_1y:13363},
-    {category:"상품",netasset:331603,flow_1w:26762,flow_1m:25729,flow_3m:43655,flow_6m:38841,flow_ytd:28448,flow_1y:70399},
-    {category:"부동산",netasset:92084,flow_1w:109,flow_1m:971,flow_3m:1298,flow_6m:4339,flow_ytd:1574,flow_1y:6458},
-    {category:"대체투자/기타",netasset:30080,flow_1w:302,flow_1m:1397,flow_3m:4519,flow_6m:6885,flow_ytd:6164,flow_1y:10658},
-    {category:"크립토",netasset:125050,flow_1w:-908,flow_1m:-349,flow_3m:4566,flow_6m:2417,flow_ytd:2199,flow_1y:61339},
-  ],
   US:[
-    {category:"주식",netasset:12064535,flow_1w:12381,flow_1m:200936,flow_3m:353111,flow_6m:757261,flow_ytd:511687,flow_1y:1345697},
-    {category:"채권",netasset:2433215,flow_1w:8442,flow_1m:45412,flow_3m:122118,flow_6m:284296,flow_ytd:226364,flow_1y:515936},
-    {category:"자산배분",netasset:41855,flow_1w:192,flow_1m:967,flow_3m:3863,flow_6m:7344,flow_ytd:6013,flow_1y:13363},
-    {category:"상품",netasset:331603,flow_1w:26762,flow_1m:25729,flow_3m:43655,flow_6m:38841,flow_ytd:28448,flow_1y:70399},
-    {category:"부동산",netasset:92084,flow_1w:109,flow_1m:971,flow_3m:1298,flow_6m:4339,flow_ytd:1574,flow_1y:6458},
-    {category:"대체투자/기타",netasset:30080,flow_1w:302,flow_1m:1397,flow_3m:4519,flow_6m:6885,flow_ytd:6164,flow_1y:10658},
-    {category:"크립토",netasset:125050,flow_1w:-908,flow_1m:-349,flow_3m:4566,flow_6m:2417,flow_ytd:2199,flow_1y:61339},
+    {category:"주식",     netasset:12346673070,flow_1w:1022370513, flow_1m:1222422036,  flow_3m:1560291051,  flow_6m:1808993617,  flow_ytd:1805381011,  flow_1y:2553950767},
+    {category:"채권",     netasset:2490235879, flow_1w:9042811,    flow_1m:43049914,    flow_3m:127227183,   flow_6m:290935603,   flow_ytd:293951275,   flow_1y:537857622},
+    {category:"자산배분", netasset:47227048,   flow_1w:-34595,     flow_1m:1970065,     flow_3m:7598120,     flow_6m:11782051,    flow_ytd:11826723,    flow_1y:18468366},
+    {category:"상품",     netasset:305925816,  flow_1w:-1136554,   flow_1m:-6124458,    flow_3m:16875794,    flow_6m:20407304,    flow_ytd:18808977,    flow_1y:52756881},
+    {category:"부동산",   netasset:95951692,   flow_1w:136900,     flow_1m:2199466,     flow_3m:3722652,     flow_6m:4716992,     flow_ytd:4693773,     flow_1y:8444255},
+    {category:"대체투자/기타",netasset:31453872,flow_1w:-599382,   flow_1m:1905566,     flow_3m:2989046,     flow_6m:3851961,     flow_ytd:3259586,     flow_1y:-19267687},
+    {category:"크립토",   netasset:91669578,   flow_1w:-1691095,   flow_1m:-4196042,    flow_3m:-5279523,    flow_6m:-6142437,    flow_ytd:-5550063,    flow_1y:16977210},
   ],
   HK:[
-    {category:"주식",netasset:1900000,flow_1w:1500,flow_1m:28000,flow_3m:52000,flow_6m:110000,flow_ytd:78000,flow_1y:210000},
-    {category:"채권",netasset:520000,flow_1w:1400,flow_1m:7800,flow_3m:21000,flow_6m:48000,flow_ytd:39000,flow_1y:88000},
-    {category:"상품",netasset:72000,flow_1w:5200,flow_1m:5000,flow_3m:8500,flow_6m:7600,flow_ytd:5600,flow_1y:14000},
-    {category:"크립토",netasset:34000,flow_1w:-180,flow_1m:-90,flow_3m:1800,flow_6m:900,flow_ytd:820,flow_1y:18000},
-    {category:"자산배분",netasset:18000,flow_1w:80,flow_1m:400,flow_3m:1600,flow_6m:3000,flow_ytd:2500,flow_1y:5500},
+    {category:"주식",     netasset:37510127,   flow_1w:-915247,    flow_1m:2272498,     flow_3m:598218,      flow_6m:2749064,     flow_ytd:2749064,     flow_1y:7177486},
+    {category:"채권",     netasset:3274472,    flow_1w:-990,       flow_1m:7362,        flow_3m:-290354,     flow_6m:-9078,       flow_ytd:-9078,       flow_1y:-261452},
+    {category:"자산배분", netasset:0,          flow_1w:0,          flow_1m:0,           flow_3m:0,           flow_6m:0,           flow_ytd:0,           flow_1y:0},
+    {category:"상품",     netasset:17776874,   flow_1w:-32776,     flow_1m:-383107,     flow_3m:-808203,     flow_6m:-1242706,    flow_ytd:-1242706,    flow_1y:517859},
+    {category:"부동산",   netasset:40028,      flow_1w:-1741,      flow_1m:-1220,       flow_3m:-5637,       flow_6m:-12217,      flow_ytd:-12217,      flow_1y:-12217},
+    {category:"대체투자/기타",netasset:0,      flow_1w:0,          flow_1m:0,           flow_3m:0,           flow_6m:0,           flow_ytd:0,           flow_1y:0},
+    {category:"크립토",   netasset:23941,      flow_1w:0,          flow_1m:-155,        flow_3m:-1097,       flow_6m:-671,        flow_ytd:-671,        flow_1y:6350},
   ],
   JP:[
-    {category:"주식",netasset:940000,flow_1w:600,flow_1m:9800,flow_3m:18000,flow_6m:38000,flow_ytd:26000,flow_1y:68000},
-    {category:"채권",netasset:230000,flow_1w:430,flow_1m:2200,flow_3m:6100,flow_6m:14000,flow_ytd:11000,flow_1y:25000},
-    {category:"상품",netasset:32000,flow_1w:2800,flow_1m:2700,flow_3m:4600,flow_6m:4100,flow_ytd:3000,flow_1y:7400},
-    {category:"부동산",netasset:21000,flow_1w:30,flow_1m:260,flow_3m:420,flow_6m:1200,flow_ytd:560,flow_1y:2100},
+    {category:"주식",     netasset:799848973,  flow_1w:1040202,    flow_1m:6742971,     flow_3m:134897425,   flow_6m:1912675497,  flow_ytd:1912675497,  flow_1y:2038754819},
+    {category:"채권",     netasset:8356900,    flow_1w:1910,       flow_1m:-97429,      flow_3m:232552,      flow_6m:-16480,      flow_ytd:-16480,      flow_1y:200965},
+    {category:"자산배분", netasset:0,          flow_1w:0,          flow_1m:0,           flow_3m:0,           flow_6m:0,           flow_ytd:0,           flow_1y:0},
+    {category:"상품",     netasset:11746393,   flow_1w:-1295,      flow_1m:-48852,      flow_3m:-235780,     flow_6m:-57750,      flow_ytd:-57750,      flow_1y:398094},
+    {category:"부동산",   netasset:15187621,   flow_1w:-329,       flow_1m:213394,      flow_3m:784223,      flow_6m:329250,      flow_ytd:329250,      flow_1y:-77477},
+    {category:"대체투자/기타",netasset:27815,  flow_1w:-705,       flow_1m:27024,       flow_3m:25214,       flow_6m:0,           flow_ytd:0,           flow_1y:0},
+    {category:"크립토",   netasset:0,          flow_1w:0,          flow_1m:0,           flow_3m:0,           flow_6m:0,           flow_ytd:0,           flow_1y:0},
   ],
 };
 
@@ -280,3 +277,25 @@ const TICKER_DATA={
     {ticker:"BETE",  name:"ProShares Bitcoin & Ether Market Cap",  flow_1w:-40,  flow_1m:-280,  flow_3m:-650,  flow_6m:-980,  flow_ytd:-680,  flow_1y:-1900},
   ],
 };
+
+/* HIER / REGION / TICKER_DATA are authored in millions for readability;
+   scale to thousands here to match DEMO base unit */
+(function(){
+  const FK=['flow_1w','flow_1m','flow_3m','flow_6m','flow_ytd','flow_1y'];
+  function scaleRows(rows){
+    rows.forEach(r=>{
+      if(r.netasset!=null) r.netasset=Math.round(r.netasset*1000);
+      FK.forEach(k=>{ if(r[k]!=null) r[k]=Math.round(r[k]*1000); });
+    });
+  }
+  Object.values(HIER).forEach(cat=>{
+    if(cat.leaves) scaleRows(cat.leaves);
+    if(cat.groups) cat.groups.forEach(g=>scaleRows(g.children||[]));
+  });
+  Object.values(REGION).forEach(cat=>{
+    if(cat.groups) cat.groups.forEach(g=>scaleRows(g.children||[]));
+  });
+  Object.values(TICKER_DATA).forEach(arr=>{
+    arr.forEach(r=>FK.forEach(k=>{ if(r[k]!=null) r[k]=Math.round(r[k]*1000); }));
+  });
+})();

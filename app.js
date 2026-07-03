@@ -12,18 +12,23 @@ const PERIOD_LABEL={flow_1w:"최근 1주",flow_1m:"최근 1개월",flow_3m:"최�
 const PERIOD_SHORT={flow_1w:"1W",flow_1m:"1M",flow_3m:"3M",flow_6m:"6M",flow_ytd:"YTD",flow_1y:"1Y"};
 const C_LABEL={US:"미국",HK:"홍콩",JP:"일본"};
 
-/* ---- currency unit system (base data is in MILLIONS of USD) ---- */
-/* factor = how many base-millions per 1 display-unit */
+/* ---- currency unit system (base data is in THOUSANDS of USD) ---- */
+/* factor = how many base-thousands per 1 display-unit */
 const UNITS={
-  trillion:{label:"조 달러",short:"조",factor:1000000},
-  billion :{label:"십억 달러",short:"십억",factor:1000},
-  million :{label:"백만 달러",short:"백만",factor:1},
-  thousand:{label:"천 달러",short:"천",factor:0.001},
+  trillion:{label:"조 달러",short:"조",factor:1000000000},
+  billion :{label:"십억 달러",short:"십억",factor:1000000},
+  million :{label:"백만 달러",short:"백만",factor:1000},
+  thousand:{label:"천 달러",short:"천",factor:1},
 };
-let unit="million"; // default
+let unit="million";
 const uScale=v=>v/UNITS[unit].factor;
 const uLabel=()=>UNITS[unit].label;
 const uShort=()=>UNITS[unit].short;
+/* KPI 전용 고정 단위 (국가별, unit selector 무관) */
+const KPI_UNIT={US:"trillion",HK:"billion",JP:"billion"};
+const kpiScale=v=>v/UNITS[KPI_UNIT[state.country]||"trillion"].factor;
+const kpiShort=()=>UNITS[KPI_UNIT[state.country]||"trillion"].label;
+const kpiFmt=n=>{const v=kpiScale(n),a=Math.abs(v);let d=0;if(a<1&&a>0)d=2;else if(a<10)d=2;else if(a<100)d=1;return v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});};
 /* axis tick formatter: scale + decimals that keep ticks distinct */
 const axisFmt=v=>{
   const s=uScale(v),a=Math.abs(s);
@@ -71,16 +76,16 @@ function renderKpis(){
 
   const cards=[
     {label:"총 순자산",icon:'<path d="M3 13h4l3 6 4-14 3 8h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-     value:fmtCompact(totalAsset),suf:uShort(),delta:"전월 대비 +1.8%",dir:"up",sub:"",
+     value:kpiFmt(totalAsset),suf:kpiShort(),delta:"전월 대비 +1.8%",dir:"up",sub:"",
      spark:miniSpark(buildSeries(totalAsset).slice(-12),assetAccent)},
     {label:`순유입 (${PERIOD_SHORT[state.period]})`,icon:'<path d="M12 19V5m0 0l-6 6m6-6l6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-     value:fmt(netIn),suf:uShort(),delta:netIn>=0?"순유입 우위":"순유출 우위",dir:netIn>=0?"up":"down",sub:"",
+     value:kpiFmt(netIn),suf:kpiShort(),delta:netIn>=0?"순유입 우위":"순유출 우위",dir:netIn>=0?"up":"down",sub:"",
      spark:miniSpark(buildSeries(Math.abs(netIn)).slice(-12),netIn>=0?inAccent:outAccent)},
     {label:`자금흐름 집중도 (${PERIOD_SHORT[state.period]})`,icon:'<circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 12V5a7 7 0 016 3.5z" fill="currentColor"/>',
      value:concentration.toFixed(1),suf:"%",delta:top?`${top.category} 비중`:"-",dir:"up",sub:"전체 유입 중",subFirst:true,
      spark:miniSpark(buildSeries(concentration).slice(-12),assetAccent)},
     {label:`최다 유입 자산 (${PERIOD_SHORT[state.period]})`,icon:'<circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2" fill="none"/><path d="M5 21c0-4 3-6 7-6s7 2 7 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>',
-     value:top?top.category:"-",suf:"",delta:top?`+${fmt(top[state.period])} ${uShort()}`:"",dir:"up",sub:"",
+     value:top?top.category:"-",suf:"",delta:top?`+${kpiFmt(top[state.period])} ${kpiShort()}`:"",dir:"up",sub:"",
      spark:top?miniSpark(buildSeries(top[state.period]).slice(-12),COLORS[top.category]||assetAccent):""},
   ];
 
