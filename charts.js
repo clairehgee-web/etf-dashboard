@@ -109,7 +109,7 @@ function drawBarChart(){
     let pi=Math.floor((px-m.l)/groupW);pi=Math.max(0,Math.min(nP-1,pi));
     tip.style.opacity="1";
     tip.style.left=((m.l+groupW*pi+groupW/2)/W*rect.width)+"px";
-    tip.style.top=(m.t)+"px";
+    tip.style.top=(H-m.b-4)+"px";
     tip.innerHTML=`<div style="font-size:10px;color:var(--ink-3);margin-bottom:3px">${labels[pi]}</div>`+
       datasets.map(d=>`<div class="row"><i style="background:${d.color}"></i>${d.name} <b class="num" style="margin-left:auto;padding-left:8px">${d.data[pi]>=0?"+":""}${d.data[pi].toFixed(2)}%</b></div>`).join("");
   });
@@ -178,7 +178,7 @@ function drawChart(){
     let i=Math.round((px-m.l)/iw*(n-1));i=Math.max(0,Math.min(n-1,i));
     tip.style.opacity="1";
     tip.style.left=(x(i)/W*rect.width)+"px";
-    tip.style.top=(m.t+10)+"px";
+    tip.style.top=(H-m.b-4)+"px";
     tip.innerHTML=`<div style="font-size:10px;color:var(--ink-3);margin-bottom:3px">${labels[i]}</div>`+
       datasets.map(d=>{const val=isReturn?`${d.data[i]>=0?"+":""}${d.data[i].toFixed(2)}%`:fmt(d.data[i]);
         return `<div class="row"><i style="background:${d.color}"></i>${d.name} <b class="num" style="margin-left:auto;padding-left:8px">${val}</b></div>`;}).join("");
