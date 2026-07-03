@@ -199,6 +199,31 @@ function renderChart(){
     drawBarChart();
     return;
   }
+  // real daily data branch (US flow view only)
+  if(state.country==="US" && typeof CUMUL_US!=="undefined"){
+    const latest=new Date(CUMUL_US[CUMUL_US.length-1].date);
+    let cutDate;
+    if(state.period==="flow_ytd"){
+      cutDate=new Date(latest.getFullYear(),0,1);
+    }else{
+      const days={flow_1w:7,flow_1m:30,flow_3m:91,flow_6m:182,flow_1y:365}[state.period]||365;
+      cutDate=new Date(latest.getTime()-days*86400000);
+    }
+    const filtered=CUMUL_US.filter(d=>new Date(d.date)>=cutDate);
+    const rlabels=filtered.map(d=>{const dt=new Date(d.date);return `${dt.getMonth()+1}/${dt.getDate()}`;});
+    const rdatasets=rows.map(r=>({
+      name:r.category,color:COLORS[r.category]||"#888",
+      data:filtered.map(d=>d[r.category]||0)
+    }));
+    chartData={datasets:rdatasets,labels:rlabels,isReturn:false,bar:false};
+    document.getElementById("chartSub").textContent=`미국 자산군 · ${PERIOD_LABEL[state.period]} 기준 · 누적 자금유출입`;
+    document.getElementById("legend").innerHTML=rdatasets.map(d=>{
+      const last=d.data[d.data.length-1];
+      return `<span><i style="background:${d.color}"></i>${d.name} <b class="num">${fmt(last)} ${uShort()}</b></span>`;
+    }).join("")||`<span style="color:var(--ink-3)">표시할 자산군을 선택하세요</span>`;
+    drawChart();
+    return;
+  }
   const labels=periodLabels(state.period);
   const n=labels.length;
   const scale=PERIOD_SCALE[state.period]||8;
