@@ -121,7 +121,6 @@ function drawChart(){
   const {datasets,labels,isReturn}=chartData;
   const box=document.getElementById("chartBox");
   const W=box.clientWidth||980,H=box.clientHeight||320;
-  const m={t:12,r:14,b:28,l:50},iw=W-m.l-m.r,ih=H-m.t-m.b,n=labels.length;
 
   // value range (return mode can go negative)
   let maxV=-Infinity,minV=Infinity;
@@ -137,11 +136,14 @@ function drawChart(){
     const pow=Math.pow(10,Math.floor(Math.log10(maxV)));hi=Math.ceil(maxV/pow)*pow||1;lo=0;
   }
   const range=(hi-lo)||1;
+  const tickFmt=v=>isReturn?`${v>=0?"+":""}${v.toFixed(v%1?1:0)}%`:axisFmt(v);
+  // dynamic left margin: estimate 6px per char at font-size 10 + 14px gap/buffer
+  const longestTick=Math.max(...[0,1,2,3,4].map(k=>tickFmt(lo+range*k/4).length));
+  const m={t:12,r:14,b:28,l:Math.max(44,longestTick*6+14)},iw=W-m.l-m.r,ih=H-m.t-m.b,n=labels.length;
   const x=i=>m.l+(n<=1?0:(i/(n-1))*iw);
   const y=v=>m.t+ih-((v-lo)/range)*ih;
   const grid=getComputedStyle(document.documentElement).getPropertyValue("--grid").trim();
   const ink3=getComputedStyle(document.documentElement).getPropertyValue("--ink-3").trim();
-  const tickFmt=v=>isReturn?`${v>=0?"+":""}${v.toFixed(v%1?1:0)}%`:axisFmt(v);
 
   let g="";for(let k=0;k<=4;k++){const val=lo+range*k/4,yy=y(val);
     g+=`<line x1="${m.l}" y1="${yy}" x2="${m.l+iw}" y2="${yy}" stroke="${grid}" stroke-width="1"/>`;
@@ -218,9 +220,11 @@ function drawReturnChart(returns,labels,containerId="pReturnChart"){
 function drawPanelChart(series,color){
   const box=document.getElementById("pChart");
   const W=box.clientWidth||390,H=box.clientHeight||170;
-  const m={t:8,r:6,b:18,l:42},iw=W-m.l-m.r,ih=H-m.t-m.b,n=series.length;
   const maxV=Math.max(...series)||1;
   const pow=Math.pow(10,Math.floor(Math.log10(maxV)));const niceMax=Math.ceil(maxV/pow)*pow||1;
+  // dynamic left margin: 5.5px per char at font-size 9 + 12px buffer
+  const longestTick=Math.max(...[0,1,2,3].map(k=>axisFmt(niceMax*k/3).length));
+  const m={t:8,r:6,b:18,l:Math.max(38,longestTick*5.5+12)},iw=W-m.l-m.r,ih=H-m.t-m.b,n=series.length;
   const x=i=>m.l+(i/(n-1))*iw,y=v=>m.t+ih-(v/niceMax)*ih;
   const grid=getComputedStyle(document.documentElement).getPropertyValue("--grid").trim();
   const ink3=getComputedStyle(document.documentElement).getPropertyValue("--ink-3").trim();
@@ -240,7 +244,7 @@ function drawPanelChart(series,color){
 function drawComboChart(series,color,containerId="apChart"){
   const box=document.getElementById(containerId);
   const W=box.clientWidth||540,H=box.clientHeight||200;
-  const m={t:10,r:46,b:24,l:46},iw=W-m.l-m.r,ih=H-m.t-m.b,n=series.length;
+  const n=series.length;
   const accent=getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
   const accent2=getComputedStyle(document.documentElement).getPropertyValue("--accent-2").trim();
   const grid=getComputedStyle(document.documentElement).getPropertyValue("--grid").trim();
@@ -253,6 +257,9 @@ function drawComboChart(series,color,containerId="apChart"){
   const aMax=Math.max(...assetVals),aMin=Math.min(...assetVals);
   const aPad=(aMax-aMin)*0.15||1;
   const aLo=aMin-aPad,aHi=aMax+aPad,aRange=(aHi-aLo)||1;
+  // dynamic left margin: 5px per char at font-size 8.5 + 10px buffer
+  const longestCumTick=Math.max(...[0,1,2,3].map(k=>axisFmt(cumMin+cumRange*k/3).length));
+  const m={t:10,r:46,b:24,l:Math.max(40,longestCumTick*5+10)},iw=W-m.l-m.r,ih=H-m.t-m.b;
 
   const x=i=>m.l+(n<=1?iw/2:(i/(n-1))*iw);
   const yCum=v=>m.t+ih-((v-cumMin)/cumRange)*ih;
