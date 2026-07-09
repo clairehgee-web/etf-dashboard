@@ -134,10 +134,11 @@ function drawCmpNavChart(){
     return;
   }
   box.querySelectorAll(".cmp-empty-msg").forEach(e=>e.remove());
-  const labels=periodLabels(cmpState.period);
-  const n=labels.length;
+  const PDAYS={flow_1w:7,flow_1m:30,flow_3m:90,flow_6m:180,flow_ytd:182,flow_1y:252};
+  const numPts=PDAYS[cmpState.period]||90;
+  const xLabels=periodLabels(cmpState.period);
   const series=active.map(a=>{
-    const raw=cmpNavSeries(a.ticker,n-1);
+    const raw=cmpNavSeries(a.ticker,numPts);
     const base=raw[0];
     return {...a,pts:raw.map(v=>+(v/base*100).toFixed(2))};
   });
@@ -146,7 +147,8 @@ function drawCmpNavChart(){
   const maxLabel=vMax.toFixed(1);
   const m={t:10,r:12,b:24,l:Math.max(40,maxLabel.length*6+14)};
   const iW=W-m.l-m.r,iH=H-m.t-m.b;
-  const xScl=i=>m.l+i/(n-1)*iW;
+  const n=numPts+1;
+  const xScl=i=>m.l+i/numPts*iW;
   const yScl=v=>m.t+iH-(v-vMin)/(vMax-vMin)*iH;
   const cs=getComputedStyle(document.documentElement);
   const gridColor=cs.getPropertyValue("--grid").trim();
@@ -165,13 +167,13 @@ function drawCmpNavChart(){
     const pts=s.pts.map((v,i)=>`${xScl(i).toFixed(1)},${yScl(v).toFixed(1)}`);
     areas+=`<polygon points="${m.l},${baseY} ${pts.join(" ")} ${m.l+iW},${baseY}" fill="url(#${id})"/>`;
     paths+=`<polyline points="${pts.join(" ")}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
-    endDots+=`<circle cx="${xScl(n-1).toFixed(1)}" cy="${yScl(s.pts[n-1]).toFixed(1)}" r="3.5" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`;
+    endDots+=`<circle cx="${xScl(numPts).toFixed(1)}" cy="${yScl(s.pts[numPts]).toFixed(1)}" r="3.5" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`;
   });
   let xl="";
-  const step=Math.ceil(n/6);
-  for(let i=0;i<n;i+=step){
-    xl+=`<text x="${xScl(i)}" y="${H-6}" text-anchor="middle" font-size="10" fill="${ink3}" font-family="Manrope">${labels[i]}</text>`;
-  }
+  xLabels.forEach((lbl,li)=>{
+    const i=Math.round(li/(xLabels.length-1)*numPts);
+    xl+=`<text x="${xScl(i)}" y="${H-6}" text-anchor="middle" font-size="10" fill="${ink3}" font-family="Manrope">${lbl}</text>`;
+  });
   box.querySelectorAll("svg").forEach(s=>s.remove());
   const ns="http://www.w3.org/2000/svg";
   const svg=document.createElementNS(ns,"svg");
@@ -298,7 +300,7 @@ function initComparePage(){
       document.querySelectorAll("#cmpPeriodSeg button").forEach(b=>b.classList.remove("on"));
       btn.classList.add("on");
       cmpState.period=btn.dataset.p;
-      drawCmpFlowChart();
+      renderCompare();
     });
   });
   const uc=document.getElementById("unitSelC");
