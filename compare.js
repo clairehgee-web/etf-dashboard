@@ -1,7 +1,7 @@
 /* compare.js – ETF 종목 비교 페이지 */
 const CMP_COLORS=["#3a36c9","#15b8b0","#f59e0b","#8b5cf6"];
 let _cmpInited=false;
-const cmpState={tickers:[null,null,null,null],period:"flow_1y"};
+const cmpState={tickers:[null,null,null,null],period:"flow_3m"};
 
 /* ---- data helpers ---- */
 function cmpAllTickers(){
@@ -38,7 +38,7 @@ function cmpNavSeries(ticker,numDays){
   return pts.map(v=>+(v*adj).toFixed(2));
 }
 
-/* ---- flow grouped-bar chart (all periods side-by-side) ---- */
+/* ---- flow line chart (cumulative, period-synced X-axis like overview) ---- */
 function drawCmpFlowChart(){
   const box=document.getElementById("cmpFlowBox");
   if(!box)return;
@@ -49,68 +49,65 @@ function drawCmpFlowChart(){
   const leg=document.getElementById("cmpFlowLeg");
   if(!active.length){
     box.querySelectorAll("svg").forEach(s=>s.remove());
-    box.querySelector(".cmp-empty-msg")?.remove();
+    box.querySelectorAll(".cmp-empty-msg").forEach(e=>e.remove());
     const msg=document.createElement("div");
-    msg.className="cmp-empty-msg";msg.style.cssText="height:100%;display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:13px;";
+    msg.className="cmp-empty-msg";
+    msg.style.cssText="height:100%;display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:13px;";
     msg.textContent="티커를 선택하면 차트가 표시됩니다";
     box.appendChild(msg);
     if(leg)leg.innerHTML=`<span style="color:var(--ink-3)">종목을 선택하세요</span>`;
     return;
   }
   box.querySelectorAll(".cmp-empty-msg").forEach(e=>e.remove());
-  const PERIODS=["flow_1w","flow_1m","flow_3m","flow_6m","flow_ytd","flow_1y"];
-  const PLABELS=["1W","1M","3M","6M","YTD","1Y"];
-  const n=active.length,pn=PERIODS.length;
-  let maxAbsVal=0;
-  active.forEach(a=>PERIODS.forEach(p=>{if(a.flow)maxAbsVal=Math.max(maxAbsVal,Math.abs(uScale(a.flow[p]||0)));}));
-  const tickStr=axisFmt(maxAbsVal*UNITS[unit].factor);
-  const m={t:10,r:14,b:32,l:Math.max(44,tickStr.length*6+14)};
+  const labels=periodLabels(cmpState.period);
+  const n=labels.length;
+  const datasets=active.map(t=>({
+    ticker:t.ticker,color:t.color,
+    data:buildSeries(Math.max(0,t.flow?t.flow[cmpState.period]||0:0),n)
+  }));
+  let maxV=0;
+  datasets.forEach(d=>d.data.forEach(v=>{if(v>maxV)maxV=v;}));
+  maxV=maxV||1;
+  const pow=Math.pow(10,Math.floor(Math.log10(uScale(maxV)||1)));
+  const hi=Math.ceil(uScale(maxV)/pow)*pow||1;
+  const longestTick=Math.max(...[0,1,2,3,4].map(k=>axisFmt(hi*k/4*UNITS[unit].factor).length));
+  const m={t:10,r:12,b:24,l:Math.max(40,longestTick*6+14)};
   const iW=W-m.l-m.r,iH=H-m.t-m.b;
-  const groupW=iW/pn;
-  const barW=Math.min(18,groupW/(n+1));
-  const gap=2;
-  let allVals=[];
-  active.forEach(a=>PERIODS.forEach(p=>{if(a.flow)allVals.push(uScale(a.flow[p]||0));}));
-  const vMax=Math.max(...allVals.map(Math.abs),1)*1.15;
-  const yZero=m.t+iH/2;
-  const yScl=v=>(iH/2)*(v/vMax);
-  const tickVals=[vMax*0.75,0,-vMax*0.75];
+  const x=i=>m.l+(i/(n-1))*iW;
+  const y=v=>m.t+iH-(v/maxV)*iH;
   const cs=getComputedStyle(document.documentElement);
   const gridColor=cs.getPropertyValue("--grid").trim();
   const ink3=cs.getPropertyValue("--ink-3").trim();
-  const gridLines=tickVals.map(v=>{
-    const y=yZero-yScl(v);
-    const label=axisFmt(v*UNITS[unit].factor);
-    return `<line x1="${m.l}" x2="${W-m.r}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${gridColor}" stroke-width="1"/>
-    <text x="${m.l-6}" y="${y.toFixed(1)}" text-anchor="end" dominant-baseline="middle" font-size="10" fill="${ink3}" font-family="Manrope">${label}</text>`;
-  }).join("");
-  let bars="",xlabels="";
-  PERIODS.forEach((p,pi)=>{
-    const cx=m.l+groupW*(pi+0.5);
-    const totalBarW=n*barW+(n-1)*gap;
-    active.forEach((a,ai)=>{
-      const val=uScale(a.flow?a.flow[p]||0:0);
-      const bx=cx-totalBarW/2+ai*(barW+gap);
-      const bh=Math.abs(yScl(val));
-      const by=val>=0?yZero-bh:yZero;
-      bars+=`<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${barW}" height="${Math.max(1,bh).toFixed(1)}" fill="${a.color}" rx="2" opacity="${p===cmpState.period?1:0.65}"/>`;
-    });
-    const bold=p===cmpState.period?" font-weight='700' fill='var(--ink)'":"";
-    xlabels+=`<text x="${cx.toFixed(1)}" y="${H-m.b+14}" text-anchor="middle" font-size="10.5" fill="${ink3}" font-family="Manrope"${bold}>${PLABELS[pi]}</text>`;
+  let g="";
+  for(let k=0;k<=4;k++){
+    const val=hi*k/4*UNITS[unit].factor,yy=y(val);
+    g+=`<line x1="${m.l}" y1="${yy}" x2="${m.l+iW}" y2="${yy}" stroke="${gridColor}" stroke-width="1"/>`;
+    g+=`<text x="${m.l-9}" y="${yy+4}" text-anchor="end" font-size="10" fill="${ink3}" font-family="Manrope">${axisFmt(val)}</text>`;
+  }
+  let xl="";
+  const step=Math.ceil(n/6);
+  for(let i=0;i<n;i+=step){
+    xl+=`<text x="${x(i)}" y="${H-6}" text-anchor="middle" font-size="10" fill="${ink3}" font-family="Manrope">${labels[i]}</text>`;
+  }
+  let defs="",areas="",lines="",endDots="";
+  const baseY=m.t+iH;
+  datasets.forEach((d,di)=>{
+    const id=`cmpfg${di}`;
+    defs+=`<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${d.color}" stop-opacity=".18"/><stop offset="1" stop-color="${d.color}" stop-opacity="0"/></linearGradient>`;
+    const pts=d.data.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`);
+    areas+=`<polygon points="${m.l},${baseY} ${pts.join(" ")} ${m.l+iW},${baseY}" fill="url(#${id})"/>`;
+    lines+=`<polyline points="${pts.join(" ")}" fill="none" stroke="${d.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    endDots+=`<circle cx="${x(n-1).toFixed(1)}" cy="${y(d.data[n-1]).toFixed(1)}" r="3.5" fill="${d.color}" stroke="var(--surface)" stroke-width="2"/>`;
   });
-  const selIdx=PERIODS.indexOf(cmpState.period);
-  const highlight=selIdx>=0?`<rect x="${(m.l+groupW*selIdx).toFixed(1)}" y="${m.t}" width="${groupW.toFixed(1)}" height="${iH}" fill="var(--accent)" opacity="0.05" rx="3"/>`:"";
   box.querySelectorAll("svg").forEach(s=>s.remove());
   const ns="http://www.w3.org/2000/svg";
   const svg=document.createElementNS(ns,"svg");
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.setAttribute("width","100%");svg.setAttribute("height","100%");
-  svg.innerHTML=`${highlight}${gridLines}${bars}${xlabels}
-    <line x1="${m.l}" x2="${W-m.r}" y1="${yZero.toFixed(1)}" y2="${yZero.toFixed(1)}" stroke="${ink3}" stroke-width="1"/>
-    <text x="${m.l-5}" y="${m.t+9}" text-anchor="end" font-size="9.5" fill="${ink3}" font-family="Manrope">${uShort()}</text>`;
+  svg.innerHTML=`<defs>${defs}</defs>${g}${xl}${areas}${lines}${endDots}`;
   box.insertBefore(svg,box.firstChild);
-  if(leg)leg.innerHTML=active.map(a=>{
-    const v=a.flow?a.flow[cmpState.period]||0:0;
-    return `<span><i style="background:${a.color}"></i>${a.ticker} <b class="num">${fmt(v)} ${uShort()}</b></span>`;
+  if(leg)leg.innerHTML=datasets.map(d=>{
+    const last=d.data[d.data.length-1];
+    return `<span><i style="background:${d.color}"></i>${d.ticker} <b class="num">${fmt(last)} ${uShort()}</b></span>`;
   }).join("");
 }
 
