@@ -428,7 +428,7 @@ const TICKER_DATA={
     {ticker:"SPY",  name:"SPDR S&P 500 ETF Trust",            flow_1w:4820, flow_1m:28340, flow_3m:52100, flow_6m:98200,  flow_ytd:72400,  flow_1y:185000},
     {ticker:"IVV",  name:"iShares Core S&P 500 ETF",          flow_1w:3210, flow_1m:19800, flow_3m:38400, flow_6m:72100,  flow_ytd:54300,  flow_1y:142000},
     {ticker:"VOO",  name:"Vanguard S&P 500 ETF",               flow_1w:2980, flow_1m:22100, flow_3m:45200, flow_6m:89300,  flow_ytd:65800,  flow_1y:168000},
-    {ticker:"QQQ",  name:"Invesco QQQ Trust",                  flow_1w:1840, flow_1m:12400, flow_3m:21800, flow_6m:38900,  flow_ytd:28400,  flow_1y:76000},
+    {ticker:"QQQ",  name:"Invesco QQQ Trust",                  flow_1w:-980, flow_1m:-6200, flow_3m:4300,  flow_6m:-12400, flow_ytd:8700,   flow_1y:-18000},
     {ticker:"VTI",  name:"Vanguard Total Stock Market ETF",    flow_1w:1620, flow_1m:11200, flow_3m:23400, flow_6m:45100,  flow_ytd:34200,  flow_1y:89000},
     {ticker:"SCHD", name:"Schwab US Dividend Equity ETF",      flow_1w:890,  flow_1m:6200,  flow_3m:14800, flow_6m:28400,  flow_ytd:21200,  flow_1y:54000},
     {ticker:"VGT",  name:"Vanguard Information Technology ETF",flow_1w:720,  flow_1m:5100,  flow_3m:11200, flow_6m:21800,  flow_ytd:16400,  flow_1y:42000},

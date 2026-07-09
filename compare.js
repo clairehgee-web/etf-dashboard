@@ -187,43 +187,143 @@ function drawCmpNavChart(){
   }).join("");
 }
 
-/* ---- comparison table ---- */
+/* ---- comparison cards ---- */
 function renderCmpTable(){
-  const tbl=document.getElementById("cmpTable");
-  if(!tbl)return;
-  const syms=cmpState.tickers;
-  const metas=syms.map(s=>(typeof TICKER_META!=="undefined"&&s?TICKER_META[s]:null));
-  const fmtD=v=>v!=null?"$"+v.toFixed(2):"—";
-  const fmtSh=v=>v!=null?v.toLocaleString("en-US"):"—";
-  const fmtNA=v=>v!=null?fmt(v)+" "+uShort():"—";
-  const fmtFee=v=>{if(v==null)return "—";const s=(+v).toString();return(s.includes(".")?s:s)+"%";};
-  const fmtDiv=v=>(v!=null&&v>0)?"$"+v.toFixed(2):"—";
-  const fmtPct=v=>(v!=null&&v>0)?v.toFixed(2)+"%":"—";
-  const ROWS=[
-    {l:"종목명",    f:m=>m?`<span style="font-size:11.5px;color:var(--ink-2)">${m.name}</span>`:"—",cls:"cmp-td-text"},
-    {l:"종가",      f:m=>m?`<span class="num">${fmtD(m.close)}</span>`:"—"},
-    {l:"NAV",       f:m=>m?`<span class="num">${fmtD(m.nav)}</span>`:"—"},
-    {l:"상장주식수",f:m=>m?`<span class="num">${fmtSh(m.shares)}</span>`:"—"},
-    {l:"순자산",    f:m=>m?`<span class="num">${fmtNA(m.netasset)}</span>`:"—"},
-    {l:"대분류",    f:m=>m?m.cat1:"—"},
-    {l:"중분류",    f:m=>m?m.cat2:"—"},
-    {l:"소분류",    f:m=>m?m.cat3:"—"},
-    {l:"수수료",    f:m=>m?`<span class="num">${fmtFee(m.fee)}</span>`:"—"},
-    {l:"12M 배당금",f:m=>m?`<span class="num">${fmtDiv(m.div12m)}</span>`:"—"},
-    {l:"12M DV(%)", f:m=>m?`<span class="num">${fmtPct(m.divYield)}</span>`:"—"},
-    {l:"배당주기",  f:m=>m?(m.divFreq||"—"):"—"},
-    {l:"설정일",    f:m=>m?(m.inception||"—"):"—"},
-    {l:"레버리지",  f:m=>m?`<span class="num">${m.leverage}x</span>`:"—"},
-  ];
-  const ths=syms.map((s,i)=>s
-    ?`<th class="cmp-th-tick" style="--cc:${CMP_COLORS[i]}">${s}</th>`
-    :`<th class="cmp-th-empty">—</th>`
-  ).join("");
-  const trs=ROWS.map((row,ri)=>{
-    const tds=syms.map((_,ci)=>`<td class="${row.cls||''}">${row.f(metas[ci])}</td>`).join("");
-    return `<tr class="${ri%2===0?'cmp-even':'cmp-odd'}"><td class="cmp-td-lbl">${row.l}</td>${tds}</tr>`;
+  const wrap=document.getElementById("cmpCards");
+  if(!wrap)return;
+  const active=cmpState.tickers
+    .map((s,i)=>s?{sym:s,color:CMP_COLORS[i]}:null)
+    .filter(Boolean);
+  if(!active.length){
+    wrap.innerHTML=`<div class="cmp-cards-empty">티커를 선택하면 종목 정보가 표시됩니다</div>`;
+    return;
+  }
+  const PKEYS=["flow_1w","flow_1m","flow_3m","flow_6m","flow_ytd","flow_1y"];
+  const PLBLS={flow_1w:"1W",flow_1m:"1M",flow_3m:"3M",flow_6m:"6M",flow_ytd:"YTD",flow_1y:"1Y"};
+  const cards=active.map(({sym,color})=>{
+    const meta=typeof TICKER_META!=="undefined"?TICKER_META[sym]:null;
+    const flow=cmpFindFlow(sym);
+    const flowVals=PKEYS.map(k=>flow?(flow[k]||0):0);
+    const maxAbs=Math.max(...flowVals.map(Math.abs),1);
+    const tags=meta?[meta.cat1,meta.cat2,meta.cat3].filter(Boolean):[];
+    const tagsHtml=tags.map(t=>`<span class="cmp-card-tag">${t}</span>`).join("");
+    const flowRows=PKEYS.map((k,i)=>{
+      const v=flowVals[i];
+      const pct=(Math.abs(v)/maxAbs*100).toFixed(1);
+      const clr=v>=0?"var(--inflow)":"var(--outflow)";
+      return `<div class="cmp-card-flow-row">
+        <span class="cmp-card-flow-lbl">${PLBLS[k]}</span>
+        <div class="cmp-card-flow-track"><div class="cmp-card-flow-bar" style="width:${pct}%;background:${clr}"></div></div>
+        <span class="cmp-card-flow-val" style="color:${clr}">${fmt(v)}</span>
+      </div>`;
+    }).join("");
+    const hasDev=meta&&meta.div12m>0;
+    const divHtml=hasDev?`
+      <div class="cmp-card-div">
+        <span class="cmp-card-micro-lbl">배당</span>
+        <span class="num">연 $${meta.div12m.toFixed(2)}</span>
+        <span class="num" style="color:var(--inflow)">${meta.divYield.toFixed(2)}%</span>
+        ${meta.divFreq?`<span class="cmp-card-tag">${meta.divFreq}</span>`:""}
+      </div>`:"";
+    return `<div class="cmp-card">
+      <div class="cmp-card-topbar" style="background:${color}"></div>
+      <div class="cmp-card-body">
+        <div class="cmp-card-head">
+          <span class="cmp-card-sym" style="color:${color}">${sym}</span>
+          <span class="cmp-card-price num">${meta?"$"+meta.nav.toFixed(2):"—"}</span>
+        </div>
+        <div class="cmp-card-name">${meta?meta.name:""}</div>
+        ${tagsHtml?`<div class="cmp-card-tags">${tagsHtml}</div>`:""}
+        <div class="cmp-card-stats">
+          <div><span class="cmp-card-micro-lbl">순자산</span><span class="cmp-card-stat-val num">${meta?fmt(meta.netasset)+" "+uShort():"—"}</span></div>
+          <div><span class="cmp-card-micro-lbl">수수료</span><span class="cmp-card-stat-val num">${meta?meta.fee+"%":"—"}</span></div>
+          <div><span class="cmp-card-micro-lbl">레버리지</span><span class="cmp-card-stat-val num">${meta?meta.leverage+"x":"—"}</span></div>
+        </div>
+        <div class="cmp-card-micro-lbl" style="margin-top:12px;margin-bottom:6px">자금유출입 <span style="font-weight:500;opacity:.7">${uShort()}</span></div>
+        <div class="cmp-card-flows">${flowRows}</div>
+        ${divHtml}
+      </div>
+    </div>`;
   }).join("");
-  tbl.innerHTML=`<thead><tr><th class="cmp-th-lbl">항목</th>${ths}</tr></thead><tbody>${trs}</tbody>`;
+  wrap.innerHTML=`<div class="cmp-cards-grid" style="--nc:${active.length}">${cards}</div>`;
+}
+
+/* ---- daily flow detail table ---- */
+function cmpTradingDays(count){
+  const days=[];
+  const d=new Date(2026,6,9); // 2026-07-09 anchor
+  while(days.length<count){
+    if(d.getDay()!==0&&d.getDay()!==6)
+      days.push(`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}`);
+    d.setDate(d.getDate()-1);
+  }
+  return days; // most-recent first
+}
+
+function cmpDailyRows(ticker,period){
+  const PDAYS={flow_1w:7,flow_1m:21,flow_3m:63,flow_6m:126,flow_ytd:126,flow_1y:252};
+  const n=PDAYS[period]||63;
+  const flow=cmpFindFlow(ticker);
+  const meta=typeof TICKER_META!=="undefined"?TICKER_META[ticker]:null;
+  const totalFlow=flow?flow[period]||0:0;
+  // build cumulative array that works for both inflow and outflow
+  const cumArr=[];
+  for(let k=0;k<n;k++){
+    const base=totalFlow*(k/(n-1));
+    const noise=totalFlow*0.04*Math.sin(k*1.3+(ticker.charCodeAt(0)%7));
+    cumArr.push(Math.round(base+noise));
+  }
+  cumArr[n-1]=totalFlow;
+  const navArr=cmpNavSeries(ticker,n-1);               // n points, ends at nav
+  const dates=cmpTradingDays(n);
+  return dates.map((date,i)=>{
+    const cumVal=cumArr[n-1-i];
+    const prevCum=i<n-1?cumArr[n-2-i]:0;
+    return{date,nav:navArr[n-1-i],daily:cumVal-prevCum,cumul:cumVal};
+  });
+}
+
+function renderCmpDaily(){
+  const wrap=document.getElementById("cmpDaily");
+  if(!wrap)return;
+  const active=cmpState.tickers
+    .map((s,i)=>s?{sym:s,color:CMP_COLORS[i]}:null)
+    .filter(Boolean);
+  if(!active.length){wrap.innerHTML="";return;}
+  const fmtFlow=v=>{
+    const s=fmt(v);
+    return v>0?`<span style="color:var(--inflow)">${s}</span>`:v<0?`<span style="color:var(--outflow)">${s}</span>`:`<span>${s}</span>`;
+  };
+  // one data array per ticker
+  const allRows=active.map(t=>({...t,rows:cmpDailyRows(t.sym,cmpState.period)}));
+  const numRows=allRows[0].rows.length;
+  // header row: 일자 + per-ticker group
+  const tickerThs=active.map(t=>
+    `<th class="cmp-daily-th-group" colspan="3" style="--cc:${t.color}">${t.sym}</th>`
+  ).join("");
+  const subThs=active.map(()=>
+    `<th>종가</th><th>당일</th><th>누적</th>`
+  ).join("");
+  let tbody="";
+  for(let i=0;i<numRows;i++){
+    const date=allRows[0].rows[i].date;
+    const cells=allRows.map(t=>{
+      const r=t.rows[i];
+      return `<td class="num">$${r.nav.toFixed(2)}</td><td class="num">${fmtFlow(r.daily)}</td><td class="num">${fmtFlow(r.cumul)}</td>`;
+    }).join("");
+    tbody+=`<tr class="${i%2===0?"cmp-even":"cmp-odd"}"><td class="cmp-daily-date">${date}</td>${cells}</tr>`;
+  }
+  wrap.innerHTML=`
+    <div class="cmp-daily-header">일별 자금유출입 상세 <span style="color:var(--ink-3);font-weight:500;font-size:11px">단위 ${uShort()}</span></div>
+    <div class="cmp-daily-scroll">
+      <table class="cmp-daily-table">
+        <thead>
+          <tr><th class="cmp-daily-th-lbl" rowspan="2">일자</th>${tickerThs}</tr>
+          <tr>${subThs}</tr>
+        </thead>
+        <tbody>${tbody}</tbody>
+      </table>
+    </div>`;
 }
 
 /* ---- master render ---- */
@@ -231,6 +331,7 @@ function renderCompare(){
   drawCmpFlowChart();
   drawCmpNavChart();
   renderCmpTable();
+  renderCmpDaily();
   const uc=document.getElementById("unitSelC");
   if(uc)uc.value=typeof unit!=="undefined"?unit:"million";
 }
@@ -308,5 +409,7 @@ function initComparePage(){
   window.addEventListener("resize",()=>{
     if(document.getElementById("page-compare").classList.contains("on"))renderCompare();
   });
+  // default tickers
+  ["SPY","QQQ","AGG","GLD"].forEach((sym,i)=>cmpSelect(i,sym));
   renderCompare();
 }
