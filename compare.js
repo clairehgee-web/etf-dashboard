@@ -111,7 +111,7 @@ function drawCmpFlowChart(){
   }).join("");
 }
 
-/* ---- NAV normalised line chart ---- */
+/* ---- NAV normalised line chart (period-synced) ---- */
 function drawCmpNavChart(){
   const box=document.getElementById("cmpNavBox");
   if(!box)return;
@@ -120,58 +120,67 @@ function drawCmpNavChart(){
     .map((t,i)=>t?{ticker:t,color:CMP_COLORS[i]}:null)
     .filter(Boolean);
   const leg=document.getElementById("cmpNavLeg");
+  const sub=document.getElementById("cmpNavSub");
+  if(sub)sub.textContent=PERIOD_LABEL[cmpState.period]||"";
   if(!active.length){
     box.querySelectorAll("svg").forEach(s=>s.remove());
-    box.querySelector(".cmp-empty-msg")?.remove();
+    box.querySelectorAll(".cmp-empty-msg").forEach(e=>e.remove());
     const msg=document.createElement("div");
-    msg.className="cmp-empty-msg";msg.style.cssText="height:100%;display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:13px;";
+    msg.className="cmp-empty-msg";
+    msg.style.cssText="height:100%;display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:13px;";
     msg.textContent="티커를 선택하면 차트가 표시됩니다";
     box.appendChild(msg);
     if(leg)leg.innerHTML=`<span style="color:var(--ink-3)">종목을 선택하세요</span>`;
     return;
   }
   box.querySelectorAll(".cmp-empty-msg").forEach(e=>e.remove());
-  const numDays=250;
+  const labels=periodLabels(cmpState.period);
+  const n=labels.length;
   const series=active.map(a=>{
-    const raw=cmpNavSeries(a.ticker,numDays);
+    const raw=cmpNavSeries(a.ticker,n-1);
     const base=raw[0];
     return {...a,pts:raw.map(v=>+(v/base*100).toFixed(2))};
   });
   let allVals=series.flatMap(s=>s.pts);
   const vMin=Math.min(...allVals)*0.99,vMax=Math.max(...allVals)*1.01;
   const maxLabel=vMax.toFixed(1);
-  const m={t:10,r:14,b:28,l:Math.max(44,maxLabel.length*6+14)};
+  const m={t:10,r:12,b:24,l:Math.max(40,maxLabel.length*6+14)};
   const iW=W-m.l-m.r,iH=H-m.t-m.b;
-  const xScl=i=>m.l+i/numDays*iW;
+  const xScl=i=>m.l+i/(n-1)*iW;
   const yScl=v=>m.t+iH-(v-vMin)/(vMax-vMin)*iH;
   const cs=getComputedStyle(document.documentElement);
   const gridColor=cs.getPropertyValue("--grid").trim();
   const ink3=cs.getPropertyValue("--ink-3").trim();
   let grid="";
-  for(let i=0;i<=4;i++){
-    const v=vMin+(vMax-vMin)*i/4,y=yScl(v);
-    grid+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${gridColor}" stroke-width="1"/>
-    <text x="${m.l-5}" y="${y.toFixed(1)}" text-anchor="end" dominant-baseline="middle" font-size="10" fill="${ink3}" font-family="Manrope">${v.toFixed(1)}</text>`;
+  for(let k=0;k<=4;k++){
+    const v=vMin+(vMax-vMin)*k/4,y=yScl(v);
+    grid+=`<line x1="${m.l}" x2="${m.l+iW}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${gridColor}" stroke-width="1"/>
+    <text x="${m.l-9}" y="${y.toFixed(1)}" text-anchor="end" dominant-baseline="middle" font-size="10" fill="${ink3}" font-family="Manrope">${v.toFixed(1)}</text>`;
   }
-  let paths="";
-  series.forEach(s=>{
-    const d=s.pts.map((v,i)=>`${i===0?"M":"L"}${xScl(i).toFixed(1)},${yScl(v).toFixed(1)}`).join(" ");
-    paths+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round"/>`;
+  let defs="",areas="",paths="",endDots="";
+  const baseY=m.t+iH;
+  series.forEach((s,si)=>{
+    const id=`cmpng${si}`;
+    defs+=`<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${s.color}" stop-opacity=".15"/><stop offset="1" stop-color="${s.color}" stop-opacity="0"/></linearGradient>`;
+    const pts=s.pts.map((v,i)=>`${xScl(i).toFixed(1)},${yScl(v).toFixed(1)}`);
+    areas+=`<polygon points="${m.l},${baseY} ${pts.join(" ")} ${m.l+iW},${baseY}" fill="url(#${id})"/>`;
+    paths+=`<polyline points="${pts.join(" ")}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    endDots+=`<circle cx="${xScl(n-1).toFixed(1)}" cy="${yScl(s.pts[n-1]).toFixed(1)}" r="3.5" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`;
   });
-  let xlabels="";
-  [0,50,100,150,200,250].forEach(i=>{
-    xlabels+=`<text x="${xScl(i).toFixed(1)}" y="${H-m.b+14}" text-anchor="middle" font-size="10" fill="${ink3}" font-family="Manrope">-${numDays-i}d</text>`;
-  });
+  let xl="";
+  const step=Math.ceil(n/6);
+  for(let i=0;i<n;i+=step){
+    xl+=`<text x="${xScl(i)}" y="${H-6}" text-anchor="middle" font-size="10" fill="${ink3}" font-family="Manrope">${labels[i]}</text>`;
+  }
   box.querySelectorAll("svg").forEach(s=>s.remove());
   const ns="http://www.w3.org/2000/svg";
   const svg=document.createElementNS(ns,"svg");
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.setAttribute("width","100%");svg.setAttribute("height","100%");
-  svg.innerHTML=`${grid}${paths}${xlabels}
-    <text x="${m.l-5}" y="${m.t+9}" text-anchor="end" font-size="9.5" fill="${ink3}" font-family="Manrope">기준100</text>`;
+  svg.innerHTML=`<defs>${defs}</defs>${grid}${xl}${areas}${paths}${endDots}
+    <text x="${m.l-8}" y="${m.t+9}" text-anchor="end" font-size="9.5" fill="${ink3}" font-family="Manrope">기준100</text>`;
   box.insertBefore(svg,box.firstChild);
   if(leg)leg.innerHTML=series.map(s=>{
-    const last=s.pts[s.pts.length-1];
-    const chg=last-100;
+    const chg=s.pts[s.pts.length-1]-100;
     return `<span><i style="background:${s.color}"></i>${s.ticker} <b class="num" style="color:${chg>=0?'var(--inflow)':'var(--outflow)'}">${chg>=0?"+":""}${chg.toFixed(1)}%</b></span>`;
   }).join("");
 }
