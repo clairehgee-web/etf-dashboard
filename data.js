@@ -1,4 +1,4 @@
-const COLORS={
+﻿const COLORS={
   "주식":"#3a36c9","채권":"#15b8b0","자산배분":"#e0973c","상품":"#9b6fc0",
   "부동산":"#3d8fb5","대체투자/기타":"#7d8a99","크립토":"#d4a32f"
 };
@@ -537,6 +537,35 @@ const TICKER_DATA={
     {ticker:"ETHW",  name:"Bitwise Ethereum ETF",                  flow_1w:-60,  flow_1m:-420,  flow_3m:-980,  flow_6m:-1480, flow_ytd:-1030, flow_1y:-2800},
     {ticker:"BETE",  name:"ProShares Bitcoin & Ether Market Cap",  flow_1w:-40,  flow_1m:-280,  flow_3m:-650,  flow_6m:-980,  flow_ytd:-680,  flow_1y:-1900},
   ],
+};
+
+/* ---- ETF ticker metadata for compare page ---- */
+const TICKER_META={
+  SPY: {name:"SPDR S&P 500 ETF Trust",            close:747.71, nav:747.71, shares:1043280000, netasset:780067000, cat1:"주식",   cat2:"종합",      cat3:"대형주",       fee:0.095, div12m:9.29,  divYield:1.24, divFreq:"Quarterly",      inception:"1993/01/22", leverage:1},
+  IVV: {name:"iShares Core S&P 500 ETF",           close:542.30, nav:542.18, shares:879200000,  netasset:476780000, cat1:"주식",   cat2:"종합",      cat3:"대형주",       fee:0.03,  div12m:6.52,  divYield:1.20, divFreq:"Quarterly",      inception:"2000/05/15", leverage:1},
+  VOO: {name:"Vanguard S&P 500 ETF",               close:498.10, nav:498.04, shares:892600000,  netasset:444540000, cat1:"주식",   cat2:"종합",      cat3:"대형주",       fee:0.03,  div12m:5.96,  divYield:1.20, divFreq:"Quarterly",      inception:"2010/09/07", leverage:1},
+  QQQ: {name:"Invesco QQQ Trust",                  close:519.43, nav:519.67, shares:670750000,  netasset:476014000, cat1:"주식",   cat2:"종합",      cat3:"성장",         fee:0.20,  div12m:3.63,  divYield:0.50, divFreq:"Quarterly",      inception:"1999/03/10", leverage:1},
+  VTI: {name:"Vanguard Total Stock Market ETF",    close:268.90, nav:268.85, shares:1396000000, netasset:375200000, cat1:"주식",   cat2:"종합",      cat3:"대형주",       fee:0.03,  div12m:3.98,  divYield:1.48, divFreq:"Quarterly",      inception:"2001/05/24", leverage:1},
+  SCHD:{name:"Schwab US Dividend Equity ETF",      close:29.14,  nav:29.13,  shares:3700000000, netasset:107800000, cat1:"주식",   cat2:"배당",      cat3:"대형주",       fee:0.06,  div12m:1.69,  divYield:3.58, divFreq:"Quarterly",      inception:"2011/10/20", leverage:1},
+  VGT: {name:"Vanguard Information Technology ETF",close:625.80, nav:625.71, shares:101300000,  netasset:63380000,  cat1:"주식",   cat2:"섹터",      cat3:"IT",           fee:0.10,  div12m:3.54,  divYield:0.57, divFreq:"Quarterly",      inception:"2004/01/26", leverage:1},
+  JEPI:{name:"JPMorgan Equity Premium Income ETF", close:59.42,  nav:59.41,  shares:1090000000, netasset:37620000,  cat1:"주식",   cat2:"커버드콜",  cat3:"대형주",       fee:0.35,  div12m:5.49,  divYield:9.24, divFreq:"Monthly",        inception:"2020/05/20", leverage:1},
+  SOXX:{name:"iShares Semiconductor ETF",          close:234.60, nav:234.54, shares:87600000,   netasset:20500000,  cat1:"주식",   cat2:"섹터",      cat3:"반도체",       fee:0.35,  div12m:1.65,  divYield:0.70, divFreq:"Semi-Annually",  inception:"2001/07/10", leverage:1},
+  IWM: {name:"iShares Russell 2000 ETF",           close:197.40, nav:197.36, shares:436800000,  netasset:86220000,  cat1:"주식",   cat2:"종합",      cat3:"소형주",       fee:0.19,  div12m:3.31,  divYield:1.68, divFreq:"Quarterly",      inception:"2000/05/22", leverage:1},
+  ARKK:{name:"ARK Innovation ETF",                 close:54.22,  nav:54.21,  shares:225600000,  netasset:12240000,  cat1:"주식",   cat2:"성장",      cat3:"혁신",         fee:0.75,  div12m:0.00,  divYield:0.00, divFreq:"Annually",       inception:"2014/10/31", leverage:1},
+  EEM: {name:"iShares MSCI Emerging Markets ETF",  close:41.87,  nav:41.86,  shares:629000000,  netasset:26340000,  cat1:"주식",   cat2:"이머징",    cat3:"종합",         fee:0.70,  div12m:0.93,  divYield:2.22, divFreq:"Semi-Annually",  inception:"2003/04/07", leverage:1},
+  AGG: {name:"iShares Core US Aggregate Bond ETF", close:97.85,  nav:97.83,  shares:740000000,  netasset:72350000,  cat1:"채권",   cat2:"종합",      cat3:"투자등급",     fee:0.03,  div12m:3.07,  divYield:3.14, divFreq:"Monthly",        inception:"2003/09/22", leverage:1},
+  BND: {name:"Vanguard Total Bond Market ETF",     close:73.41,  nav:73.40,  shares:897000000,  netasset:65830000,  cat1:"채권",   cat2:"종합",      cat3:"투자등급",     fee:0.03,  div12m:2.78,  divYield:3.79, divFreq:"Monthly",        inception:"2007/04/03", leverage:1},
+  TLT: {name:"iShares 20+ Year Treasury Bond ETF", close:83.20,  nav:83.18,  shares:380000000,  netasset:31620000,  cat1:"채권",   cat2:"국채",      cat3:"장기",         fee:0.15,  div12m:3.62,  divYield:4.35, divFreq:"Monthly",        inception:"2002/07/22", leverage:1},
+  LQD: {name:"iShares iBoxx Investment Grade Corp",close:104.50, nav:104.48, shares:311000000,  netasset:32500000,  cat1:"채권",   cat2:"회사채",    cat3:"투자등급",     fee:0.14,  div12m:4.45,  divYield:4.26, divFreq:"Monthly",        inception:"2002/07/22", leverage:1},
+  HYG: {name:"iShares iBoxx High Yield Corp Bond", close:77.31,  nav:77.30,  shares:318000000,  netasset:24590000,  cat1:"채권",   cat2:"회사채",    cat3:"하이일드",     fee:0.48,  div12m:5.78,  divYield:7.47, divFreq:"Monthly",        inception:"2007/04/04", leverage:1},
+  BOND:{name:"PIMCO Active Bond ETF",              close:91.44,  nav:91.37,  shares:90650000,   netasset:8282750,   cat1:"채권",   cat2:"종합",      cat3:"종합",         fee:0.55,  div12m:4.75,  divYield:5.17, divFreq:"Monthly",        inception:"2012/02/29", leverage:1},
+  GLD: {name:"SPDR Gold Shares",                   close:298.40, nav:298.38, shares:403200000,  netasset:120290000, cat1:"상품",   cat2:"귀금속",    cat3:"금",           fee:0.40,  div12m:0.00,  divYield:0.00, divFreq:"N/A",            inception:"2004/11/18", leverage:1},
+  IAU: {name:"iShares Gold Trust",                 close:59.68,  nav:59.67,  shares:1023000000, netasset:61030000,  cat1:"상품",   cat2:"귀금속",    cat3:"금",           fee:0.25,  div12m:0.00,  divYield:0.00, divFreq:"N/A",            inception:"2005/01/21", leverage:1},
+  SLV: {name:"iShares Silver Trust",               close:28.92,  nav:28.91,  shares:689000000,  netasset:19920000,  cat1:"상품",   cat2:"귀금속",    cat3:"은",           fee:0.50,  div12m:0.00,  divYield:0.00, divFreq:"N/A",            inception:"2006/04/21", leverage:1},
+  VNQ: {name:"Vanguard Real Estate ETF",           close:82.30,  nav:82.28,  shares:385000000,  netasset:31680000,  cat1:"부동산", cat2:"리츠",      cat3:"종합",         fee:0.13,  div12m:3.72,  divYield:4.52, divFreq:"Quarterly",      inception:"2004/09/23", leverage:1},
+  IBIT:{name:"iShares Bitcoin Trust ETF",          close:58.92,  nav:58.90,  shares:1200000000, netasset:70700000,  cat1:"크립토", cat2:"비트코인",  cat3:"현물",         fee:0.25,  div12m:0.00,  divYield:0.00, divFreq:"N/A",            inception:"2024/01/11", leverage:1},
+  FBTC:{name:"Fidelity Wise Origin Bitcoin Fund",  close:59.10,  nav:59.08,  shares:520000000,  netasset:30730000,  cat1:"크립토", cat2:"비트코인",  cat3:"현물",         fee:0.25,  div12m:0.00,  divYield:0.00, divFreq:"N/A",            inception:"2024/01/11", leverage:1},
+  ESGE:{name:"iShares MSCI EM ESG Optimized ETF",  close:52.61,  nav:52.52,  shares:127400000,  netasset:6691040,   cat1:"주식",   cat2:"이머징",    cat3:"ESG(주식)",    fee:0.25,  div12m:1.13,  divYield:2.10, divFreq:"Semi-Annually",  inception:"2016/06/28", leverage:1},
 };
 
 /* HIER / REGION / TICKER_DATA are authored in millions for readability;

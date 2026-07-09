@@ -260,10 +260,13 @@ function syncSegs(){
   // unit selects
   document.getElementById("unitSel").value=unit;
   document.getElementById("unitSelD").value=unit;
+  const uc=document.getElementById("unitSelC");if(uc)uc.value=unit;
 }
 function rerenderActive(){
   const detailOn=document.getElementById("page-detail").classList.contains("on");
+  const compareOn=document.getElementById("page-compare").classList.contains("on");
   if(detailOn){renderCatTabs();renderTree();}
+  else if(compareOn){if(typeof renderCompare==="function")renderCompare();}
   else{renderKpis();renderTable();renderChart();}
 }
 function applyUnit(u){
@@ -272,6 +275,7 @@ function applyUnit(u){
   if(document.getElementById("panel").classList.contains("on")&&lastLeaf)openPanel(lastLeaf.leaf,lastLeaf.group);
   document.getElementById("unitNote").textContent="단위 "+uLabel();
   document.getElementById("treeUnitNote").textContent="단위 "+uLabel();
+  const uc=document.getElementById("unitSelC");if(uc)uc.value=u;
 }
 function applyView(v){state.view=v;syncSegs();rerenderActive();}
 function applyPeriod(p){state.period=p;syncSegs();rerenderActive();}
@@ -459,8 +463,13 @@ document.querySelectorAll("#viewSwitch button").forEach(b=>b.addEventListener("c
   const pg=b.dataset.page;
   document.getElementById("page-overview").classList.toggle("on",pg==="overview");
   document.getElementById("page-detail").classList.toggle("on",pg==="detail");
+  document.getElementById("page-compare").classList.toggle("on",pg==="compare");
   if(pg==="detail"){renderCatTabs();renderTree();}
   if(pg==="overview"){if(chartData&&chartData.bar)drawBarChart();else drawChart();}
+  if(pg==="compare"){
+    if(typeof initComparePage==="function"&&!window._cmpInited){window._cmpInited=true;initComparePage();}
+    if(typeof renderCompare==="function")renderCompare();
+  }
 }));
 
 function renderCatTabs(){

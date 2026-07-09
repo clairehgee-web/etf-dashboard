@@ -30,6 +30,10 @@
           <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 12h13M10 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="4" cy="12" r="1.4" fill="currentColor"/><circle cx="7" cy="18" r="1.4" fill="currentColor"/></svg>
           세부 분석
         </button>
+        <button data-page="compare">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="8" height="14" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="13" y="5" width="8" height="14" rx="1.5" stroke="currentColor" stroke-width="2"/><path d="M8 9h-2M8 12h-2M8 15h-2M18 9h-2M18 12h-2M18 15h-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          종목 비교
+        </button>
       </div>
       <span class="pill"><span class="dot"></span>실시간 데모</span>
       <button class="theme-btn" id="themeBtn" aria-label="테마 전환">
@@ -166,6 +170,93 @@
       <span><span id="treeUnitNote" style="color:var(--accent);font-weight:700"></span> &nbsp;·&nbsp; <span id="treeLastUpdate"></span></span>
     </div>
   </div><!-- /page-detail -->
+
+  <!-- ===== COMPARE PAGE ===== -->
+  <div class="page" id="page-compare">
+    <div class="toolbar">
+      <div class="seg" id="cmpPeriodSeg">
+        <button data-p="flow_1w">1W</button>
+        <button data-p="flow_1m">1M</button>
+        <button data-p="flow_3m">3M</button>
+        <button data-p="flow_6m">6M</button>
+        <button data-p="flow_ytd">YTD</button>
+        <button data-p="flow_1y" class="on">1Y</button>
+      </div>
+      <div class="grow"></div>
+      <div class="field">
+        <span>단위</span>
+        <select id="unitSelC">
+          <option value="trillion">조 달러</option>
+          <option value="billion">십억 달러</option>
+          <option value="million" selected>백만 달러</option>
+          <option value="thousand">천 달러</option>
+        </select>
+      </div>
+    </div>
+    <div class="cmp-slots">
+      <div class="cmp-slot" data-idx="0">
+        <div class="cmp-bar" style="background:#3a36c9"></div>
+        <div class="cmp-inp-wrap">
+          <svg class="cmp-ico" viewBox="0 0 24 24" fill="none"><circle cx="10" cy="10" r="6" stroke="currentColor" stroke-width="1.8"/><path d="M15 15l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input class="cmp-inp" placeholder="티커 입력 (SPY, QQQ 등)" type="text" autocomplete="off" spellcheck="false">
+          <button class="cmp-clr" style="display:none" title="초기화"><svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="cmp-drop"></div>
+      </div>
+      <div class="cmp-slot" data-idx="1">
+        <div class="cmp-bar" style="background:#15b8b0"></div>
+        <div class="cmp-inp-wrap">
+          <svg class="cmp-ico" viewBox="0 0 24 24" fill="none"><circle cx="10" cy="10" r="6" stroke="currentColor" stroke-width="1.8"/><path d="M15 15l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input class="cmp-inp" placeholder="티커 입력 (SPY, QQQ 등)" type="text" autocomplete="off" spellcheck="false">
+          <button class="cmp-clr" style="display:none" title="초기화"><svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="cmp-drop"></div>
+      </div>
+      <div class="cmp-slot" data-idx="2">
+        <div class="cmp-bar" style="background:#f59e0b"></div>
+        <div class="cmp-inp-wrap">
+          <svg class="cmp-ico" viewBox="0 0 24 24" fill="none"><circle cx="10" cy="10" r="6" stroke="currentColor" stroke-width="1.8"/><path d="M15 15l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input class="cmp-inp" placeholder="티커 입력 (SPY, QQQ 등)" type="text" autocomplete="off" spellcheck="false">
+          <button class="cmp-clr" style="display:none" title="초기화"><svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="cmp-drop"></div>
+      </div>
+      <div class="cmp-slot" data-idx="3">
+        <div class="cmp-bar" style="background:#8b5cf6"></div>
+        <div class="cmp-inp-wrap">
+          <svg class="cmp-ico" viewBox="0 0 24 24" fill="none"><circle cx="10" cy="10" r="6" stroke="currentColor" stroke-width="1.8"/><path d="M15 15l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input class="cmp-inp" placeholder="티커 입력 (SPY, QQQ 등)" type="text" autocomplete="off" spellcheck="false">
+          <button class="cmp-clr" style="display:none" title="초기화"><svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="cmp-drop"></div>
+      </div>
+    </div>
+    <div class="cmp-charts">
+      <div class="card cmp-chart-card">
+        <div class="chart-head">
+          <div class="chart-title">누적 자금유출입 추이<small>자금유출입 기준</small></div>
+          <div class="legend" id="cmpFlowLeg"></div>
+        </div>
+        <div class="cmp-chart-box" id="cmpFlowBox"><div class="tip" id="cmpFlowTip"></div></div>
+      </div>
+      <div class="card cmp-chart-card">
+        <div class="chart-head">
+          <div class="chart-title">NAV 추이<small>최근 24개월</small></div>
+          <div class="legend" id="cmpNavLeg"></div>
+        </div>
+        <div class="cmp-chart-box" id="cmpNavBox"><div class="tip" id="cmpNavTip"></div></div>
+      </div>
+    </div>
+    <div class="card cmp-table-card">
+      <div class="cmp-table-wrap">
+        <table class="cmp-table" id="cmpTable"></table>
+      </div>
+    </div>
+    <div class="foot">
+      <span style="color:var(--ink-3)">최대 4개 종목 동시 비교 · 티커 또는 종목명으로 검색</span>
+    </div>
+  </div><!-- /page-compare -->
+
   </div><!-- /wrap -->
 
   <!-- slide-over detail panel -->
@@ -272,6 +363,7 @@
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="data.js"></script>
 <script src="charts.js"></script>
+<script src="compare.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
