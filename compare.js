@@ -1,7 +1,7 @@
 /* compare.js – ETF 종목 비교 페이지 */
 const CMP_COLORS=["#3a36c9","#15b8b0","#f59e0b","#8b5cf6"];
 let _cmpInited=false;
-const cmpState={tickers:[null,null,null,null],period:"flow_3m"};
+const cmpState={tickers:[null,null,null,null],period:"flow_3m",priceMode:"mktprice"};
 
 /* ---- data helpers ---- */
 function cmpAllTickers(){
@@ -349,20 +349,29 @@ function renderCmpDaily(){
   const tickerThs=active.map(t=>
     `<th class="cmp-daily-th-group" colspan="3" style="--cc:${t.color}">${t.sym}</th>`
   ).join("");
+  const pm=cmpState.priceMode;
+  const priceLbl=pm==="nav"?"NAV":"시장가";
   const subThs=active.map(()=>
-    `<th>시장가</th><th>당일</th><th>누적</th>`
+    `<th>${priceLbl}</th><th>당일</th><th>누적</th>`
   ).join("");
   let tbody="";
   for(let i=0;i<numRows;i++){
     const date=allRows[0].rows[i].date;
     const cells=allRows.map(t=>{
       const r=t.rows[i];
-      return `<td class="num">${r.mktprice!=null?"$"+r.mktprice.toFixed(2):"—"}</td><td class="num">${fmtFlow(r.daily)}</td><td class="num">${fmtFlow(r.cumul)}</td>`;
+      const pv=pm==="nav"?r.nav:r.mktprice;
+      return `<td class="num">${pv!=null?"$"+pv.toFixed(2):"—"}</td><td class="num">${fmtFlow(r.daily)}</td><td class="num">${fmtFlow(r.cumul)}</td>`;
     }).join("");
     tbody+=`<tr class="${i%2===0?"cmp-even":"cmp-odd"}"><td class="cmp-daily-date">${date}</td>${cells}</tr>`;
   }
   wrap.innerHTML=`
-    <div class="cmp-daily-header">일별 자금유출입 상세 <span style="color:var(--ink-3);font-weight:500;font-size:11px">단위 ${uShort()}</span></div>
+    <div class="cmp-daily-header">
+      <span>일별 자금유출입 상세 <span style="color:var(--ink-3);font-weight:500;font-size:11px">단위 ${uShort()}</span></span>
+      <div class="seg cmp-price-seg">
+        <button data-pm="mktprice" class="${pm==="mktprice"?"on":""}">시장가</button>
+        <button data-pm="nav" class="${pm==="nav"?"on":""}">NAV</button>
+      </div>
+    </div>
     <div class="cmp-daily-scroll">
       <table class="cmp-daily-table">
         <thead>
@@ -374,11 +383,19 @@ function renderCmpDaily(){
     </div>`;
   requestAnimationFrame(()=>{
     const tbl=wrap.querySelector(".cmp-daily-table");
-    if(!tbl)return;
-    const row1=tbl.querySelector("thead tr:first-child");
-    if(!row1)return;
-    const h=Math.ceil(row1.getBoundingClientRect().height);
-    tbl.querySelectorAll("thead tr:last-child th").forEach(th=>{th.style.top=h+"px";});
+    if(tbl){
+      const row1=tbl.querySelector("thead tr:first-child");
+      if(row1){
+        const h=Math.ceil(row1.getBoundingClientRect().height);
+        tbl.querySelectorAll("thead tr:last-child th").forEach(th=>{th.style.top=h+"px";});
+      }
+    }
+    wrap.querySelectorAll("[data-pm]").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        cmpState.priceMode=btn.dataset.pm;
+        renderCmpDaily();
+      });
+    });
   });
 }
 

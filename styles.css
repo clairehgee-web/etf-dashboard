@@ -427,7 +427,10 @@
   .cmp-daily-header{
     font-size:13px;font-weight:700;color:var(--ink-1);
     padding:13px 18px 10px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;
   }
+  .cmp-price-seg{gap:2px;}
+  .cmp-price-seg button{font-size:11px;padding:3px 9px;}
   .cmp-daily-scroll{overflow-x:auto;max-height:360px;overflow-y:auto;scrollbar-color:var(--line) var(--surface-2);}
   .cmp-daily-scroll::-webkit-scrollbar{width:6px;height:6px;}
   .cmp-daily-scroll::-webkit-scrollbar-track{background:var(--surface-2);}
