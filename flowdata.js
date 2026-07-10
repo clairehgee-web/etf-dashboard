@@ -249,8 +249,7 @@ const DAILY_FLOW = {
     {date:"2026/06/30",daily:-2129330,cumul:10186922,nav:747.13},
     {date:"2026/07/01",daily:4696980,cumul:14883902,nav:745.55},
     {date:"2026/07/02",daily:-3355090,cumul:11528812,nav:745.58},
-    {date:"2026/07/06",daily:-938809,cumul:10590003,nav:751.05},
-    {date:"2026/07/07",daily:0,cumul:10590003,nav:null}
+    {date:"2026/07/06",daily:-938809,cumul:10590003,nav:751.05}
   ],
   QQQ: [
     {date:"2025/07/09",daily:-139095,cumul:-139095,nav:null},
@@ -501,8 +500,7 @@ const DAILY_FLOW = {
     {date:"2026/06/30",daily:-4345000,cumul:12591258,nav:736.44},
     {date:"2026/07/01",daily:10622900,cumul:23214158,nav:725.11},
     {date:"2026/07/02",daily:856128,cumul:24070286,nav:713.44},
-    {date:"2026/07/06",daily:0,cumul:24070286,nav:722.45},
-    {date:"2026/07/07",daily:0,cumul:24070286,nav:null}
+    {date:"2026/07/06",daily:0,cumul:24070286,nav:722.45}
   ],
   AGG: [
     {date:"2025/07/09",daily:-39389,cumul:-39389,nav:null},
@@ -753,8 +751,7 @@ const DAILY_FLOW = {
     {date:"2026/06/30",daily:0,cumul:9577825,nav:98.96},
     {date:"2026/07/01",daily:0,cumul:9577825,nav:98.44},
     {date:"2026/07/02",daily:462677,cumul:10040502,nav:98.44},
-    {date:"2026/07/06",daily:0,cumul:10040502,nav:98.61},
-    {date:"2026/07/07",daily:0,cumul:10040502,nav:null}
+    {date:"2026/07/06",daily:0,cumul:10040502,nav:98.61}
   ],
   GLD: [
     {date:"2025/07/09",daily:152006,cumul:152006,nav:null},
@@ -1005,7 +1002,6 @@ const DAILY_FLOW = {
     {date:"2026/06/30",daily:36947,cumul:4053307,nav:369.47},
     {date:"2026/07/01",daily:-525400,cumul:3527907,nav:375.29},
     {date:"2026/07/02",daily:189466,cumul:3717373,nav:378.93},
-    {date:"2026/07/06",daily:-37999,cumul:3679373,nav:379.99},
-    {date:"2026/07/07",daily:0,cumul:3679373,nav:null}
+    {date:"2026/07/06",daily:-37999,cumul:3679373,nav:379.99}
   ],
 };
