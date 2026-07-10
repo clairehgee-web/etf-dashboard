@@ -425,10 +425,10 @@ const REGION_CATS=Object.keys(REGION);
 /* flows in millions USD, matching base data unit */
 const TICKER_DATA={
   "주식":[
-    {ticker:"SPY",  name:"SPDR S&P 500 ETF Trust",            flow_1w:4820, flow_1m:28340, flow_3m:52100, flow_6m:98200,  flow_ytd:72400,  flow_1y:185000},
+    {ticker:"SPY",  name:"SPDR S&P 500 ETF Trust",            flow_1w:403,   flow_1m:-315,  flow_3m:30417, flow_6m:1724,  flow_ytd:323,   flow_1y:10590},
     {ticker:"IVV",  name:"iShares Core S&P 500 ETF",          flow_1w:3210, flow_1m:19800, flow_3m:38400, flow_6m:72100,  flow_ytd:54300,  flow_1y:142000},
     {ticker:"VOO",  name:"Vanguard S&P 500 ETF",               flow_1w:2980, flow_1m:22100, flow_3m:45200, flow_6m:89300,  flow_ytd:65800,  flow_1y:168000},
-    {ticker:"QQQ",  name:"Invesco QQQ Trust",                  flow_1w:-980, flow_1m:-6200, flow_3m:4300,  flow_6m:-12400, flow_ytd:8700,   flow_1y:-18000},
+    {ticker:"QQQ",  name:"Invesco QQQ Trust",                  flow_1w:11479, flow_1m:6891, flow_3m:21329, flow_6m:9553,  flow_ytd:9553,  flow_1y:24070},
     {ticker:"VTI",  name:"Vanguard Total Stock Market ETF",    flow_1w:1620, flow_1m:11200, flow_3m:23400, flow_6m:45100,  flow_ytd:34200,  flow_1y:89000},
     {ticker:"SCHD", name:"Schwab US Dividend Equity ETF",      flow_1w:890,  flow_1m:6200,  flow_3m:14800, flow_6m:28400,  flow_ytd:21200,  flow_1y:54000},
     {ticker:"VGT",  name:"Vanguard Information Technology ETF",flow_1w:720,  flow_1m:5100,  flow_3m:11200, flow_6m:21800,  flow_ytd:16400,  flow_1y:42000},
@@ -447,7 +447,7 @@ const TICKER_DATA={
     {ticker:"EFA",  name:"iShares MSCI EAFE ETF",              flow_1w:-180, flow_1m:-1200, flow_3m:-2600, flow_6m:-5000,  flow_ytd:-3700,  flow_1y:-9400},
   ],
   "채권":[
-    {ticker:"AGG",  name:"iShares Core US Aggregate Bond ETF", flow_1w:920,  flow_1m:6400,  flow_3m:14200, flow_6m:27400,  flow_ytd:20600,  flow_1y:52000},
+    {ticker:"AGG",  name:"iShares Core US Aggregate Bond ETF", flow_1w:463,  flow_1m:2298,  flow_3m:3410,  flow_6m:4261,  flow_ytd:4671,  flow_1y:10041},
     {ticker:"BND",  name:"Vanguard Total Bond Market ETF",     flow_1w:780,  flow_1m:5400,  flow_3m:12100, flow_6m:23400,  flow_ytd:17600,  flow_1y:44000},
     {ticker:"SGOV", name:"iShares 0-3 Month Treasury Bond ETF",flow_1w:640,  flow_1m:4500,  flow_3m:9800,  flow_6m:18900,  flow_ytd:14200,  flow_1y:36000},
     {ticker:"SHV",  name:"iShares Short Treasury Bond ETF",    flow_1w:520,  flow_1m:3600,  flow_3m:8100,  flow_6m:15600,  flow_ytd:11700,  flow_1y:29000},
@@ -483,7 +483,7 @@ const TICKER_DATA={
     {ticker:"BLNDX", name:"Standpoint Multi-Asset ETF",          flow_1w:6,   flow_1m:42,  flow_3m:92,  flow_6m:178, flow_ytd:134, flow_1y:330},
   ],
   "상품":[
-    {ticker:"GLD",  name:"SPDR Gold Shares",                      flow_1w:4200, flow_1m:7800,  flow_3m:14200, flow_6m:18900, flow_ytd:12800, flow_1y:28000},
+    {ticker:"GLD",  name:"SPDR Gold Shares",                      flow_1w:-374, flow_1m:-2269, flow_3m:-7155,  flow_6m:3679,  flow_ytd:-10156, flow_1y:3679},
     {ticker:"IAU",  name:"iShares Gold Trust",                    flow_1w:2800, flow_1m:5200,  flow_3m:9400,  flow_6m:12600, flow_ytd:8500,  flow_1y:18600},
     {ticker:"GLDM", name:"SPDR Gold MiniShares Trust",            flow_1w:1900, flow_1m:3500,  flow_3m:6400,  flow_6m:8600,  flow_ytd:5800,  flow_1y:12700},
     {ticker:"PDBC", name:"Invesco Optimum Yield Diversified Cmdty",flow_1w:820, flow_1m:1500,  flow_3m:2800,  flow_6m:3700,  flow_ytd:2500,  flow_1y:5500},

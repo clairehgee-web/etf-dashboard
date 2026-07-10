@@ -38,6 +38,23 @@ function cmpNavSeries(ticker,numDays){
   return pts.map(v=>+(v*adj).toFixed(2));
 }
 
+/* ---- helper: real cumul series for flow chart ---- */
+function cmpFlowSeries(ticker,period){
+  if(typeof DAILY_FLOW==="undefined"||!DAILY_FLOW[ticker])return null;
+  const allRows=DAILY_FLOW[ticker];
+  const PCOUNT={flow_1w:7,flow_1m:21,flow_3m:63,flow_6m:126,flow_ytd:null,flow_1y:252};
+  let subset;
+  if(period==="flow_ytd"){
+    subset=allRows.filter(r=>r.date>="2026/01/01");
+  } else {
+    const count=PCOUNT[period]||63;
+    subset=allRows.slice(Math.max(0,allRows.length-count));
+  }
+  if(!subset.length)return null;
+  const baseC=subset[0].cumul-subset[0].daily;
+  return subset.map(r=>r.cumul-baseC);
+}
+
 /* ---- flow line chart (cumulative, period-synced X-axis like overview) ---- */
 function drawCmpFlowChart(){
   const box=document.getElementById("cmpFlowBox");
@@ -60,42 +77,53 @@ function drawCmpFlowChart(){
   }
   box.querySelectorAll(".cmp-empty-msg").forEach(e=>e.remove());
   const labels=periodLabels(cmpState.period);
-  const n=labels.length;
-  const datasets=active.map(t=>({
-    ticker:t.ticker,color:t.color,
-    data:buildSeries(Math.max(0,t.flow?t.flow[cmpState.period]||0:0),n)
-  }));
-  let maxV=0;
-  datasets.forEach(d=>d.data.forEach(v=>{if(v>maxV)maxV=v;}));
-  maxV=maxV||1;
-  const pow=Math.pow(10,Math.floor(Math.log10(uScale(maxV)||1)));
-  const hi=Math.ceil(uScale(maxV)/pow)*pow||1;
-  const longestTick=Math.max(...[0,1,2,3,4].map(k=>axisFmt(hi*k/4*UNITS[unit].factor).length));
-  const m={t:10,r:12,b:24,l:Math.max(40,longestTick*6+14)};
+  const firstReal=active.map(t=>cmpFlowSeries(t.ticker,cmpState.period)).find(Boolean);
+  const n=firstReal?firstReal.length:labels.length;
+  const datasets=active.map(t=>{
+    const real=cmpFlowSeries(t.ticker,cmpState.period);
+    return{ticker:t.ticker,color:t.color,
+      data:real||buildSeries(t.flow?t.flow[cmpState.period]||0:0,n)};
+  });
+  let minV=0,maxV=0;
+  datasets.forEach(d=>d.data.forEach(v=>{if(v>maxV)maxV=v;if(v<minV)minV=v;}));
+  const hiScaled=uScale(maxV);
+  const loScaled=uScale(minV);
+  const rangeScaled=Math.max(Math.abs(hiScaled),Math.abs(loScaled))||1;
+  const pow=Math.pow(10,Math.floor(Math.log10(rangeScaled)));
+  const hi=maxV>0?Math.ceil(hiScaled/pow)*pow:0;
+  const lo=minV<0?-(Math.ceil(-loScaled/pow)*pow):0;
+  const yMax=(hi>0?hi:lo<0?0:1)*UNITS[unit].factor;
+  const yMin=lo*UNITS[unit].factor;
+  const yRange=(yMax-yMin)||1;
+  const sampleTicks=[0,1,2,3,4].map(k=>yMin+yRange*k/4);
+  const longestTick=Math.max(...sampleTicks.map(v=>axisFmt(v).length));
+  const m={t:18,r:12,b:24,l:Math.max(40,longestTick*6+14)};
   const iW=W-m.l-m.r,iH=H-m.t-m.b;
   const x=i=>m.l+(i/(n-1))*iW;
-  const y=v=>m.t+iH-(v/maxV)*iH;
+  const y=v=>m.t+iH-((v-yMin)/yRange)*iH;
   const cs=getComputedStyle(document.documentElement);
   const gridColor=cs.getPropertyValue("--grid").trim();
   const ink3=cs.getPropertyValue("--ink-3").trim();
   let g="";
   for(let k=0;k<=4;k++){
-    const val=hi*k/4*UNITS[unit].factor,yy=y(val);
-    g+=`<line x1="${m.l}" y1="${yy}" x2="${m.l+iW}" y2="${yy}" stroke="${gridColor}" stroke-width="1"/>`;
-    g+=`<text x="${m.l-9}" y="${yy+4}" text-anchor="end" font-size="10" fill="${ink3}" font-family="Manrope">${axisFmt(val)}</text>`;
+    const val=yMin+yRange*k/4,yy=y(val);
+    g+=`<line x1="${m.l}" y1="${yy.toFixed(1)}" x2="${m.l+iW}" y2="${yy.toFixed(1)}" stroke="${gridColor}" stroke-width="1"/>`;
+    g+=`<text x="${m.l-9}" y="${(yy+4).toFixed(1)}" text-anchor="end" font-size="10" fill="${ink3}" font-family="Manrope">${axisFmt(val)}</text>`;
+  }
+  if(yMin<0&&yMax>0){
+    const yz=y(0).toFixed(1);
+    g+=`<line x1="${m.l}" y1="${yz}" x2="${m.l+iW}" y2="${yz}" stroke="${gridColor}" stroke-width="1.5" stroke-dasharray="4,2"/>`;
   }
   let xl="";
   const step=Math.ceil(n/6);
   for(let i=0;i<n;i+=step){
-    xl+=`<text x="${x(i)}" y="${H-6}" text-anchor="middle" font-size="10" fill="${ink3}" font-family="Manrope">${labels[i]}</text>`;
+    xl+=`<text x="${x(i).toFixed(1)}" y="${H-6}" text-anchor="middle" font-size="10" fill="${ink3}" font-family="Manrope">${labels[Math.min(i,labels.length-1)]}</text>`;
   }
-  let defs="",areas="",lines="",endDots="";
-  const baseY=m.t+iH;
-  datasets.forEach((d,di)=>{
-    const id=`cmpfg${di}`;
-    defs+=`<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${d.color}" stop-opacity=".18"/><stop offset="1" stop-color="${d.color}" stop-opacity="0"/></linearGradient>`;
+  let areas="",lines="",endDots="";
+  const baseY=y(0).toFixed(1);
+  datasets.forEach((d)=>{
     const pts=d.data.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`);
-    areas+=`<polygon points="${m.l},${baseY} ${pts.join(" ")} ${m.l+iW},${baseY}" fill="url(#${id})"/>`;
+    areas+=`<polygon points="${m.l},${baseY} ${pts.join(" ")} ${m.l+iW},${baseY}" fill="${d.color}" fill-opacity="0.09"/>`;
     lines+=`<polyline points="${pts.join(" ")}" fill="none" stroke="${d.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
     endDots+=`<circle cx="${x(n-1).toFixed(1)}" cy="${y(d.data[n-1]).toFixed(1)}" r="3.5" fill="${d.color}" stroke="var(--surface)" stroke-width="2"/>`;
   });
@@ -103,7 +131,8 @@ function drawCmpFlowChart(){
   const ns="http://www.w3.org/2000/svg";
   const svg=document.createElementNS(ns,"svg");
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.setAttribute("width","100%");svg.setAttribute("height","100%");
-  svg.innerHTML=`<defs>${defs}</defs>${g}${xl}${areas}${lines}${endDots}`;
+  svg.setAttribute("overflow","hidden");
+  svg.innerHTML=`${g}${xl}${areas}${lines}${endDots}`;
   box.insertBefore(svg,box.firstChild);
   if(leg)leg.innerHTML=datasets.map(d=>{
     const last=d.data[d.data.length-1];
@@ -121,7 +150,7 @@ function drawCmpNavChart(){
     .filter(Boolean);
   const leg=document.getElementById("cmpNavLeg");
   const sub=document.getElementById("cmpNavSub");
-  if(sub)sub.textContent=PERIOD_LABEL[cmpState.period]||"";
+  if(sub)sub.innerHTML=`${PERIOD_LABEL[cmpState.period]||""} <span style="opacity:.6">· 기준 100</span>`;
   if(!active.length){
     box.querySelectorAll("svg").forEach(s=>s.remove());
     box.querySelectorAll(".cmp-empty-msg").forEach(e=>e.remove());
@@ -145,7 +174,7 @@ function drawCmpNavChart(){
   let allVals=series.flatMap(s=>s.pts);
   const vMin=Math.min(...allVals)*0.99,vMax=Math.max(...allVals)*1.01;
   const maxLabel=vMax.toFixed(1);
-  const m={t:10,r:12,b:24,l:Math.max(40,maxLabel.length*6+14)};
+  const m={t:22,r:12,b:24,l:Math.max(40,maxLabel.length*6+14)};
   const iW=W-m.l-m.r,iH=H-m.t-m.b;
   const n=numPts+1;
   const xScl=i=>m.l+i/numPts*iW;
@@ -179,7 +208,7 @@ function drawCmpNavChart(){
   const svg=document.createElementNS(ns,"svg");
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.setAttribute("width","100%");svg.setAttribute("height","100%");
   svg.innerHTML=`<defs>${defs}</defs>${grid}${xl}${areas}${paths}${endDots}
-    <text x="${m.l-8}" y="${m.t+9}" text-anchor="end" font-size="9.5" fill="${ink3}" font-family="Manrope">기준100</text>`;
+`;
   box.insertBefore(svg,box.firstChild);
   if(leg)leg.innerHTML=series.map(s=>{
     const chg=s.pts[s.pts.length-1]-100;
@@ -261,12 +290,31 @@ function cmpTradingDays(count){
 }
 
 function cmpDailyRows(ticker,period){
+  const PCOUNT={flow_1w:7,flow_1m:21,flow_3m:63,flow_6m:126,flow_ytd:null,flow_1y:252};
+  if(typeof DAILY_FLOW!=="undefined"&&DAILY_FLOW[ticker]){
+    const allRows=DAILY_FLOW[ticker]; // oldest-first
+    let subset;
+    if(period==="flow_ytd"){
+      subset=allRows.filter(r=>r.date>="2026/01/01");
+    } else {
+      const count=PCOUNT[period]||63;
+      subset=allRows.slice(Math.max(0,allRows.length-count));
+    }
+    if(!subset.length)subset=allRows;
+    const baseC=subset[0].cumul-subset[0].daily;
+    const navArr=cmpNavSeries(ticker,subset.length-1);
+    return subset.slice().reverse().map((r,i)=>({
+      date:r.date,
+      nav:navArr[subset.length-1-i],
+      daily:r.daily,
+      cumul:r.cumul-baseC,
+    }));
+  }
+  // fallback: synthetic
   const PDAYS={flow_1w:7,flow_1m:21,flow_3m:63,flow_6m:126,flow_ytd:126,flow_1y:252};
   const n=PDAYS[period]||63;
   const flow=cmpFindFlow(ticker);
-  const meta=typeof TICKER_META!=="undefined"?TICKER_META[ticker]:null;
   const totalFlow=flow?flow[period]||0:0;
-  // build cumulative array that works for both inflow and outflow
   const cumArr=[];
   for(let k=0;k<n;k++){
     const base=totalFlow*(k/(n-1));
@@ -274,7 +322,7 @@ function cmpDailyRows(ticker,period){
     cumArr.push(Math.round(base+noise));
   }
   cumArr[n-1]=totalFlow;
-  const navArr=cmpNavSeries(ticker,n-1);               // n points, ends at nav
+  const navArr=cmpNavSeries(ticker,n-1);
   const dates=cmpTradingDays(n);
   return dates.map((date,i)=>{
     const cumVal=cumArr[n-1-i];
@@ -324,6 +372,14 @@ function renderCmpDaily(){
         <tbody>${tbody}</tbody>
       </table>
     </div>`;
+  requestAnimationFrame(()=>{
+    const tbl=wrap.querySelector(".cmp-daily-table");
+    if(!tbl)return;
+    const row1=tbl.querySelector("thead tr:first-child");
+    if(!row1)return;
+    const h=Math.ceil(row1.getBoundingClientRect().height);
+    tbl.querySelectorAll("thead tr:last-child th").forEach(th=>{th.style.top=h+"px";});
+  });
 }
 
 /* ---- master render ---- */
