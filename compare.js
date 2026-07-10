@@ -302,10 +302,9 @@ function cmpDailyRows(ticker,period){
     }
     if(!subset.length)subset=allRows;
     const baseC=subset[0].cumul-subset[0].daily;
-    const navArr=cmpNavSeries(ticker,subset.length-1);
-    return subset.slice().reverse().map((r,i)=>({
+    return subset.slice().reverse().map(r=>({
       date:r.date,
-      nav:navArr[subset.length-1-i],
+      nav:r.nav,
       daily:r.daily,
       cumul:r.cumul-baseC,
     }));
@@ -350,14 +349,14 @@ function renderCmpDaily(){
     `<th class="cmp-daily-th-group" colspan="3" style="--cc:${t.color}">${t.sym}</th>`
   ).join("");
   const subThs=active.map(()=>
-    `<th>종가</th><th>당일</th><th>누적</th>`
+    `<th>NAV</th><th>당일</th><th>누적</th>`
   ).join("");
   let tbody="";
   for(let i=0;i<numRows;i++){
     const date=allRows[0].rows[i].date;
     const cells=allRows.map(t=>{
       const r=t.rows[i];
-      return `<td class="num">$${r.nav.toFixed(2)}</td><td class="num">${fmtFlow(r.daily)}</td><td class="num">${fmtFlow(r.cumul)}</td>`;
+      return `<td class="num">${r.nav!=null?"$"+r.nav.toFixed(2):"—"}</td><td class="num">${fmtFlow(r.daily)}</td><td class="num">${fmtFlow(r.cumul)}</td>`;
     }).join("");
     tbody+=`<tr class="${i%2===0?"cmp-even":"cmp-odd"}"><td class="cmp-daily-date">${date}</td>${cells}</tr>`;
   }
