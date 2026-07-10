@@ -231,8 +231,20 @@ function renderCmpTable(){
   const PLBLS={flow_1w:"1W",flow_1m:"1M",flow_3m:"3M",flow_6m:"6M",flow_ytd:"YTD",flow_1y:"1Y"};
   const cards=active.map(({sym,color})=>{
     const meta=typeof TICKER_META!=="undefined"?TICKER_META[sym]:null;
+    // latest price: DAILY_FLOW last row mktprice → nav → TICKER_META.nav
+    const dfRows=(typeof DAILY_FLOW!=="undefined"&&DAILY_FLOW[sym])||null;
+    const lastRow=dfRows?dfRows[dfRows.length-1]:null;
+    const latestPrice=lastRow?(lastRow.mktprice??lastRow.nav??null):(meta?meta.nav:null);
+    const latestDate=lastRow?lastRow.date:null;
+    // flow aggregates: compute from DAILY_FLOW if available, else TICKER_DATA
     const flow=cmpFindFlow(sym);
-    const flowVals=PKEYS.map(k=>flow?(flow[k]||0):0);
+    const flowVals=PKEYS.map(k=>{
+      if(dfRows){
+        const s=cmpFlowSeries(sym,k);
+        if(s)return s[s.length-1];
+      }
+      return flow?(flow[k]||0):0;
+    });
     const maxAbs=Math.max(...flowVals.map(Math.abs),1);
     const tags=meta?[meta.cat1,meta.cat2,meta.cat3].filter(Boolean):[];
     const tagsHtml=tags.map(t=>`<span class="cmp-card-tag">${t}</span>`).join("");
@@ -259,7 +271,10 @@ function renderCmpTable(){
       <div class="cmp-card-body">
         <div class="cmp-card-head">
           <span class="cmp-card-sym" style="color:${color}">${sym}</span>
-          <span class="cmp-card-price num">${meta?"$"+meta.nav.toFixed(2):"—"}</span>
+          <div style="text-align:right">
+            <div class="cmp-card-price num">${latestPrice!=null?"$"+latestPrice.toFixed(2):"—"}</div>
+            ${latestDate?`<div style="font-size:10px;color:var(--ink-3);font-weight:400">${latestDate}</div>`:""}
+          </div>
         </div>
         <div class="cmp-card-name">${meta?meta.name:""}</div>
         ${tagsHtml?`<div class="cmp-card-tags">${tagsHtml}</div>`:""}
