@@ -250,11 +250,15 @@ function renderCmpTable(){
     const tagsHtml=tags.map(t=>`<span class="cmp-card-tag">${t}</span>`).join("");
     const flowRows=PKEYS.map((k,i)=>{
       const v=flowVals[i];
-      const pct=(Math.abs(v)/maxAbs*100).toFixed(1);
+      const halfPct=(Math.abs(v)/maxAbs*50).toFixed(1);
       const clr=v>=0?"var(--inflow)":"var(--outflow)";
+      const barStyle=v>=0?`left:50%;width:${halfPct}%`:`right:50%;width:${halfPct}%`;
       return `<div class="cmp-card-flow-row">
         <span class="cmp-card-flow-lbl">${PLBLS[k]}</span>
-        <div class="cmp-card-flow-track"><div class="cmp-card-flow-bar" style="width:${pct}%;background:${clr}"></div></div>
+        <div class="cmp-card-flow-track">
+          <div class="cmp-card-flow-center"></div>
+          <div class="cmp-card-flow-bar" style="${barStyle};background:${clr}"></div>
+        </div>
         <span class="cmp-card-flow-val" style="color:${clr}">${fmt(v)}</span>
       </div>`;
     }).join("");
