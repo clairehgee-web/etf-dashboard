@@ -302,9 +302,9 @@ document.querySelectorAll("#axisSeg button").forEach(b=>b.addEventListener("clic
 window.addEventListener("resize",()=>{if(chartData&&chartData.bar)drawBarChart();else drawChart();});
 
 /* ---------- Excel 내보내기 ---------- */
-function svgToPng(svgEl){
+function svgToPng(svgEl,boxId="chartBox"){
   return new Promise(resolve=>{
-    const box=document.getElementById("chartBox");
+    const box=document.getElementById(boxId);
     const W=box.clientWidth||980, H=box.clientHeight||320;
     const bg=getComputedStyle(document.documentElement).getPropertyValue("--surface").trim()||"#ffffff";
     const clone=svgEl.cloneNode(true);

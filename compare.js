@@ -138,6 +138,21 @@ function drawCmpFlowChart(){
     const last=d.data[d.data.length-1];
     return `<span><i style="background:${d.color}"></i>${d.ticker} <b class="num">${fmt(last)} ${uShort()}</b></span>`;
   }).join("");
+
+  const tip=document.getElementById("cmpFlowTip");
+  if(tip){
+    svg.addEventListener("mousemove",e=>{
+      const rect=box.getBoundingClientRect();
+      const px=(e.clientX-rect.left)/rect.width*W;
+      let i=Math.round((px-m.l)/iW*(n-1));i=Math.max(0,Math.min(n-1,i));
+      tip.style.opacity="1";
+      tip.style.left=(x(i)/W*rect.width)+"px";
+      tip.style.top=(H-m.b-4)+"px";
+      tip.innerHTML=`<div style="font-size:10px;color:var(--ink-3);margin-bottom:3px">${labels[Math.min(i,labels.length-1)]}</div>`+
+        datasets.map(d=>`<div class="row"><i style="background:${d.color}"></i>${d.ticker} <b class="num" style="margin-left:auto;padding-left:8px">${fmt(d.data[i])} ${uShort()}</b></div>`).join("");
+    });
+    svg.addEventListener("mouseleave",()=>{tip.style.opacity="0";});
+  }
 }
 
 /* ---- NAV normalised line chart (period-synced) ---- */
@@ -214,6 +229,22 @@ function drawCmpNavChart(){
     const chg=s.pts[s.pts.length-1]-100;
     return `<span><i style="background:${s.color}"></i>${s.ticker} <b class="num" style="color:${chg>=0?'var(--inflow)':'var(--outflow)'}">${chg>=0?"+":""}${chg.toFixed(1)}%</b></span>`;
   }).join("");
+
+  const tip=document.getElementById("cmpNavTip");
+  if(tip){
+    svg.addEventListener("mousemove",e=>{
+      const rect=box.getBoundingClientRect();
+      const px=(e.clientX-rect.left)/rect.width*W;
+      let i=Math.round((px-m.l)/iW*numPts);i=Math.max(0,Math.min(numPts,i));
+      const li=Math.max(0,Math.min(xLabels.length-1,Math.round(i/numPts*(xLabels.length-1))));
+      tip.style.opacity="1";
+      tip.style.left=(xScl(i)/W*rect.width)+"px";
+      tip.style.top=(H-m.b-4)+"px";
+      tip.innerHTML=`<div style="font-size:10px;color:var(--ink-3);margin-bottom:3px">${xLabels[li]}</div>`+
+        series.map(s=>`<div class="row"><i style="background:${s.color}"></i>${s.ticker} <b class="num" style="margin-left:auto;padding-left:8px">${s.pts[i].toFixed(2)}</b></div>`).join("");
+    });
+    svg.addEventListener("mouseleave",()=>{tip.style.opacity="0";});
+  }
 }
 
 /* ---- comparison cards ---- */
@@ -417,6 +448,91 @@ function renderCmpDaily(){
     });
   });
 }
+
+/* ---- excel export ---- */
+const CMP_XLSX_ICON=`<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 9h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M9 9v12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 3v12m0 0l-3.5-3.5M12 15l3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Excel 다운로드`;
+
+function cmpHexToArgb(hex){return "FF"+hex.replace("#","").toUpperCase();}
+
+function cmpAddChartSection(ws,wb,title,boxId,active){
+  ws.addRow([]);
+  const titleRow=ws.addRow([title]);
+  titleRow.font={bold:true,size:12};
+  active.forEach(t=>{
+    const r=ws.addRow(["",t.ticker||t.sym]);
+    r.getCell(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:cmpHexToArgb(t.color)}};
+    r.getCell(2).font={bold:true};
+  });
+  const box=document.getElementById(boxId);
+  const svgEl=box?box.querySelector("svg"):null;
+  if(!svgEl)return;
+  return svgToPng(svgEl,boxId).then(base64=>{
+    if(!base64)return;
+    const imgId=wb.addImage({base64,extension:"png"});
+    const w=box.clientWidth||600,h=box.clientHeight||200;
+    ws.addImage(imgId,{tl:{col:0,row:ws.rowCount},ext:{width:w,height:h}});
+    const imgRows=Math.ceil(h/20)+1;
+    for(let i=0;i<imgRows;i++)ws.addRow([]);
+  });
+}
+
+function cmpBuildDailyTable(ws,title,active,period,priceKey){
+  const titleRow=ws.addRow([title]);
+  titleRow.font={bold:true,size:12};
+  const allRows=active.map(t=>({...t,rows:cmpDailyRows(t.ticker,period)}));
+  const numRows=allRows.length?allRows[0].rows.length:0;
+  const priceLbl=priceKey==="nav"?"NAV":"시장가";
+  const header=["일자",...active.flatMap(t=>[`${t.ticker} ${priceLbl}`,`${t.ticker} 당일 (${uShort()})`,`${t.ticker} 누적 (${uShort()})`])];
+  const headerRow=ws.addRow(header);
+  headerRow.font={bold:true};
+  for(let i=0;i<numRows;i++){
+    const date=allRows[0].rows[i].date;
+    const row=[date];
+    allRows.forEach(t=>{
+      const r=t.rows[i];
+      const pv=priceKey==="nav"?r.nav:r.mktprice;
+      row.push(pv!=null?+pv.toFixed(2):null,+uScale(r.daily).toFixed(2),+uScale(r.cumul).toFixed(2));
+    });
+    ws.addRow(row);
+  }
+  ws.addRow([]);
+}
+
+async function exportCompareExcel(){
+  const btn=document.getElementById("xlsxBtnC");
+  if(!btn)return;
+  btn.disabled=true;btn.textContent="저장 중…";
+  try{
+    const active=cmpState.tickers
+      .map((t,i)=>t?{ticker:t,color:CMP_COLORS[i]}:null)
+      .filter(Boolean);
+    if(!active.length)return;
+
+    const wb=new ExcelJS.Workbook();
+
+    const wsChart=wb.addWorksheet("차트");
+    wsChart.columns=[{width:14},{width:14}];
+    await cmpAddChartSection(wsChart,wb,"누적 자금유출입 추이","cmpFlowBox",active);
+    await cmpAddChartSection(wsChart,wb,"NAV 추이","cmpNavBox",active);
+
+    const wsDaily=wb.addWorksheet("일별상세");
+    const colCount=1+active.length*3;
+    wsDaily.columns=Array.from({length:colCount},(_,i)=>({width:i===0?12:14}));
+    cmpBuildDailyTable(wsDaily,"일별 자금유출입 상세 (시장가 기준)",active,cmpState.period,"mktprice");
+    cmpBuildDailyTable(wsDaily,"일별 자금유출입 상세 (NAV 기준)",active,cmpState.period,"nav");
+
+    const buf=await wb.xlsx.writeBuffer();
+    const blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=url;a.download=`ETF_종목비교_${active.map(t=>t.ticker).join("_")}.xlsx`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }finally{
+    btn.disabled=false;btn.innerHTML=CMP_XLSX_ICON;
+  }
+}
+const cmpXlsxBtn=document.getElementById("xlsxBtnC");
+if(cmpXlsxBtn)cmpXlsxBtn.addEventListener("click",exportCompareExcel);
 
 /* ---- master render ---- */
 function renderCompare(){
